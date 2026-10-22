@@ -1,4 +1,4 @@
-module go.bytecodealliance.org
+module github.com/kjanat/go-modules
 
 go 1.23.0
 

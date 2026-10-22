@@ -8,7 +8,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"go.bytecodealliance.org/internal/relpath"
+	"github.com/kjanat/go-modules/internal/relpath"
 	"golang.org/x/mod/modfile"
 )
 

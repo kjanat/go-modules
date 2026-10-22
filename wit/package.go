@@ -3,7 +3,7 @@ package wit
 import (
 	"strings"
 
-	"go.bytecodealliance.org/wit/ordered"
+	"github.com/kjanat/go-modules/wit/ordered"
 )
 
 // Package represents a [WIT package] within a [Resolve].

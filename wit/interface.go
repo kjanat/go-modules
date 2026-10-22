@@ -3,7 +3,7 @@ package wit
 import (
 	"iter"
 
-	"go.bytecodealliance.org/wit/ordered"
+	"github.com/kjanat/go-modules/wit/ordered"
 )
 
 // An Interface represents a [collection of types and functions], which are imported into

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"go.bytecodealliance.org/internal/relpath"
-	"go.bytecodealliance.org/internal/wasmtools"
+	"github.com/kjanat/go-modules/internal/relpath"
+	"github.com/kjanat/go-modules/internal/wasmtools"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
 )

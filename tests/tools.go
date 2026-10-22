@@ -2,4 +2,4 @@
 
 package tests
 
-import _ "go.bytecodealliance.org/cmd/wit-bindgen-go"
+import _ "github.com/kjanat/go-modules/cmd/wit-bindgen-go"

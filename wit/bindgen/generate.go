@@ -1,8 +1,8 @@
 package bindgen
 
 import (
-	"go.bytecodealliance.org/internal/go/gen"
-	"go.bytecodealliance.org/wit"
+	"github.com/kjanat/go-modules/internal/go/gen"
+	"github.com/kjanat/go-modules/wit"
 )
 
 // Go generates one or more Go packages from [wit.Resolve] res.

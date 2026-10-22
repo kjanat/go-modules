@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"go.bytecodealliance.org/internal/oci"
-	"go.bytecodealliance.org/wit"
+	"github.com/kjanat/go-modules/internal/oci"
+	"github.com/kjanat/go-modules/wit"
 )
 
 // LoadWIT loads a single [wit.Resolve].

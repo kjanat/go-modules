@@ -17,11 +17,11 @@ import (
 
 	"golang.org/x/tools/go/packages"
 
-	"go.bytecodealliance.org/internal/codec"
-	"go.bytecodealliance.org/internal/go/gen"
-	"go.bytecodealliance.org/internal/relpath"
-	"go.bytecodealliance.org/wit"
-	"go.bytecodealliance.org/wit/logging"
+	"github.com/kjanat/go-modules/internal/codec"
+	"github.com/kjanat/go-modules/internal/go/gen"
+	"github.com/kjanat/go-modules/internal/relpath"
+	"github.com/kjanat/go-modules/wit"
+	"github.com/kjanat/go-modules/wit/logging"
 )
 
 var writeGoFiles = flag.Bool("write", false, "write generated Go files")

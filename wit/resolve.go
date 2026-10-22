@@ -4,7 +4,7 @@ import (
 	"iter"
 	"slices"
 
-	"go.bytecodealliance.org/wit/iterate"
+	"github.com/kjanat/go-modules/wit/iterate"
 )
 
 // Resolve represents a fully resolved set of WIT ([WebAssembly Interface Type])
