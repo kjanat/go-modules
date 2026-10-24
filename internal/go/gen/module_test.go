@@ -31,11 +31,14 @@ func TestPackagePath(t *testing.T) {
 }
 
 func TestPackagePathNestedModule(t *testing.T) {
-	root := t.TempDir()
+	root, err := os.MkdirTemp("", t.Name()+"-")
+	if err != nil {
+		t.Fatal(err)
+	}
 	module := filepath.Join(root, "go.mod")
 	internal := filepath.Join(root, "internal")
 	nested := filepath.Join(internal, "bindings")
-	// TinyGo's Windows RemoveAll cannot enumerate directories.
+	// TinyGo lacks recursive removal on Windows and WASI.
 	t.Cleanup(func() {
 		for _, path := range []string{nested, internal, module, root} {
 			if err := os.Remove(path); err != nil && !os.IsNotExist(err) {

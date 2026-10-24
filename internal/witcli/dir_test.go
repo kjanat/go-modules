@@ -12,7 +12,10 @@ import (
 )
 
 func TestFindOrCreateDirFind(t *testing.T) {
-	temp := t.TempDir()
+	temp, err := os.MkdirTemp("", t.Name()+"-")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	dir := filepath.Join(temp, "existing")
 	cleanupEmptyDirs(t, dir, temp)
@@ -49,7 +52,10 @@ func TestFindOrCreateDirFind(t *testing.T) {
 }
 
 func TestFindOrCreateDirCreate(t *testing.T) {
-	temp := t.TempDir()
+	temp, err := os.MkdirTemp("", t.Name()+"-")
+	if err != nil {
+		t.Fatal(err)
+	}
 	control := filepath.Join(temp, "control")
 	dir := filepath.Join(temp, "new")
 	cleanupEmptyDirs(t, dir, control, temp)
@@ -93,7 +99,7 @@ func TestFindOrCreateDirCreate(t *testing.T) {
 	}
 }
 
-// TinyGo's Windows RemoveAll cannot enumerate directories; remove owned leaves first.
+// TinyGo lacks recursive removal on Windows and WASI; remove owned leaves first.
 func cleanupEmptyDirs(t *testing.T, paths ...string) {
 	t.Helper()
 	t.Cleanup(func() {
