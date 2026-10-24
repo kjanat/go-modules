@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/kjanat/go-modules/internal/codec"
+	"go-modules.kjanat.dev/internal/codec"
 )
 
 type Decoder struct {

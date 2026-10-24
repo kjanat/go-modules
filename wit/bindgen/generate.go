@@ -1,8 +1,8 @@
 package bindgen
 
 import (
-	"github.com/kjanat/go-modules/internal/go/gen"
-	"github.com/kjanat/go-modules/wit"
+	"go-modules.kjanat.dev/internal/go/gen"
+	"go-modules.kjanat.dev/wit"
 )
 
 // Go generates one or more Go packages from [wit.Resolve] res.

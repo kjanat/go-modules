@@ -6,8 +6,8 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/kjanat/go-modules/internal/witcli"
-	"github.com/kjanat/go-modules/wit"
+	"go-modules.kjanat.dev/internal/witcli"
+	"go-modules.kjanat.dev/wit"
 )
 
 // Command is the CLI command for wit.

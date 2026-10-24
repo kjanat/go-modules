@@ -20,15 +20,15 @@ import (
 	"testing/fstest"
 	"time"
 
-	"github.com/kjanat/go-modules/internal/codec"
-	"github.com/kjanat/go-modules/internal/go/gen"
-	"github.com/kjanat/go-modules/internal/stringio"
-	"github.com/kjanat/go-modules/internal/wasm"
-	"github.com/kjanat/go-modules/internal/wasmtools"
-	"github.com/kjanat/go-modules/wit"
-	"github.com/kjanat/go-modules/wit/logging"
-	"github.com/kjanat/go-modules/wit/ordered"
 	"github.com/tetratelabs/wazero/sys"
+	"go-modules.kjanat.dev/internal/codec"
+	"go-modules.kjanat.dev/internal/go/gen"
+	"go-modules.kjanat.dev/internal/stringio"
+	"go-modules.kjanat.dev/internal/wasm"
+	"go-modules.kjanat.dev/internal/wasmtools"
+	"go-modules.kjanat.dev/wit"
+	"go-modules.kjanat.dev/wit/logging"
+	"go-modules.kjanat.dev/wit/ordered"
 	"go.bytecodealliance.org/cm"
 )
 

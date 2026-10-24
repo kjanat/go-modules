@@ -6,7 +6,7 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/kjanat/go-modules/internal/wasmtools"
+	"go-modules.kjanat.dev/internal/wasmtools"
 )
 
 func main() {

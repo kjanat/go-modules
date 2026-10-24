@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"io"
 
-	"github.com/kjanat/go-modules/internal/wasm/uleb128"
+	"go-modules.kjanat.dev/internal/wasm/uleb128"
 )
 
 const (

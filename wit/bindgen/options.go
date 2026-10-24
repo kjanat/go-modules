@@ -1,7 +1,7 @@
 package bindgen
 
 import (
-	"github.com/kjanat/go-modules/wit/logging"
+	"go-modules.kjanat.dev/wit/logging"
 )
 
 // Option represents a single configuration option for this package.

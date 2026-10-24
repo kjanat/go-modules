@@ -3,7 +3,7 @@ package ordered
 import (
 	"iter"
 
-	"github.com/kjanat/go-modules/internal/codec"
+	"go-modules.kjanat.dev/internal/codec"
 )
 
 // Map represents an ordered map of key-value pairs.

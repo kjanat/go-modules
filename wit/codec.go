@@ -4,8 +4,8 @@ import (
 	"io"
 
 	"github.com/coreos/go-semver/semver"
-	"github.com/kjanat/go-modules/internal/codec"
-	"github.com/kjanat/go-modules/internal/codec/json"
+	"go-modules.kjanat.dev/internal/codec"
+	"go-modules.kjanat.dev/internal/codec/json"
 )
 
 // DecodeJSON decodes JSON from r into a [Resolve] struct.

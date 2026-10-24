@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kjanat/go-modules/internal/wasmtools"
 	"github.com/tetratelabs/wazero/sys"
+	"go-modules.kjanat.dev/internal/wasmtools"
 )
 
 // LoadJSON loads a [WIT] JSON file from path.

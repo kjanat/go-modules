@@ -1,8 +1,8 @@
-# github.com/kjanat/go-modules
+# go-modules.kjanat.dev
 
-Actionlint's maintained fork of [bytecodealliance/go-modules](https://github.com/bytecodealliance/go-modules), including the WIT loader path and runtime cleanup fixes in [#429](https://github.com/bytecodealliance/go-modules/pull/429). Import `github.com/kjanat/go-modules` directly; the separate `go.bytecodealliance.org/cm` module stays upstream. Fork changes ship from `master` under this module path and its own version tags.
+Actionlint's maintained fork of [bytecodealliance/go-modules](https://github.com/bytecodealliance/go-modules), including the WIT loader path and runtime cleanup fixes in [#429](https://github.com/bytecodealliance/go-modules/pull/429). Import `go-modules.kjanat.dev`; the separate `go.bytecodealliance.org/cm` module stays upstream. Fork changes ship from `master` under this module path and its own version tags.
 
-[![pkg.go.dev](https://img.shields.io/badge/docs-pkg.go.dev-blue.svg)](https://pkg.go.dev/github.com/kjanat/go-modules) [![build status](https://img.shields.io/github/actions/workflow/status/kjanat/go-modules/test.yaml?branch=master)](https://github.com/kjanat/go-modules/actions)
+[![pkg.go.dev](https://img.shields.io/badge/docs-pkg.go.dev-blue.svg)](https://pkg.go.dev/go-modules.kjanat.dev) [![build status](https://img.shields.io/github/actions/workflow/status/kjanat/go-modules/test.yaml?branch=master)](https://github.com/kjanat/go-modules/actions)
 
 [WebAssembly](https://webassembly.org), [WASI](https://wasi.dev), and [Component Model](https://component-model.bytecodealliance.org/) tools for [Go](https://go.dev) and [TinyGo](https://tinygo.org).
 

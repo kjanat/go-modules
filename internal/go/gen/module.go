@@ -8,7 +8,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/kjanat/go-modules/internal/relpath"
+	"go-modules.kjanat.dev/internal/relpath"
 	"golang.org/x/mod/modfile"
 )
 

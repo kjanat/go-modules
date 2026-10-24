@@ -16,9 +16,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/kjanat/go-modules/internal/module"
 	"github.com/tetratelabs/wazero"
 	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
+	"go-modules.kjanat.dev/internal/module"
 )
 
 //go:embed wasm-tools.wasm.gz

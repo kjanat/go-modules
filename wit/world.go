@@ -3,8 +3,8 @@ package wit
 import (
 	"iter"
 
-	"github.com/kjanat/go-modules/wit/iterate"
-	"github.com/kjanat/go-modules/wit/ordered"
+	"go-modules.kjanat.dev/wit/iterate"
+	"go-modules.kjanat.dev/wit/ordered"
 )
 
 // A World represents all of the imports and exports of a [WebAssembly component].

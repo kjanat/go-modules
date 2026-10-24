@@ -2,6 +2,20 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.8.0] - 2026-10-24
+
+### Changed
+
+- Import the fork as `go-modules.kjanat.dev`. The separate `go.bytecodealliance.org/cm` module stays upstream.
+- Require Go 1.27 and select toolchain Go 1.27.3.
+- Restrict test workflow tokens to read-only repository contents.
+
+### Fixed
+
+- Resolve WIT paths and generated package paths correctly on Windows.
+- Preserve canonical ABI allocation alignment on Go 1.26 and later.
+- Update compress to 1.18.7, regclient to 0.11.5 and xz to 0.5.15 to address dependency vulnerabilities.
+
 ## [v0.7.0] — 2025-05-25
 
 ### Changed

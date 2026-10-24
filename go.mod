@@ -1,4 +1,4 @@
-module github.com/kjanat/go-modules
+module go-modules.kjanat.dev
 
 go 1.27.0
 

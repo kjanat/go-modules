@@ -3,7 +3,7 @@ package bindgen
 import (
 	"slices"
 
-	"github.com/kjanat/go-modules/wit"
+	"go-modules.kjanat.dev/wit"
 )
 
 // variantShape returns the type with the greatest size that is not a bool.

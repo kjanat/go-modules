@@ -3,7 +3,7 @@ package bindgen
 import (
 	"strings"
 
-	"github.com/kjanat/go-modules/internal/go/gen"
+	"go-modules.kjanat.dev/internal/go/gen"
 )
 
 func formatDocComments(s string, indent bool) string {

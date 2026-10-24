@@ -4,7 +4,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/kjanat/go-modules/internal/go/gen"
+	"go-modules.kjanat.dev/internal/go/gen"
 )
 
 // GoPackageName generates a Go local package name (e.g. "json").
