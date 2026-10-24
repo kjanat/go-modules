@@ -9,7 +9,20 @@ import (
 )
 
 func TestLoadWITPaths(t *testing.T) {
-	root := t.TempDir()
+	// Relative paths require the fixture and working directory to share a volume.
+	root, err := os.MkdirTemp(".", ".wit-load-paths-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.RemoveAll(root); err != nil {
+			t.Error(err)
+		}
+	})
+	root, err = filepath.Abs(root)
+	if err != nil {
+		t.Fatal(err)
+	}
 	file := filepath.Join(root, "nested", "example.wit")
 	if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
 		t.Fatal(err)
