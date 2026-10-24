@@ -12,6 +12,9 @@ on:
         - 'docs/**'
         - 'LICENSE'
 
+permissions:
+  contents: read
+
 env:
   GOTOOLCHAIN: local
   go-modules: ./... ./cm/...
