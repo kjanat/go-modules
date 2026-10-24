@@ -25,10 +25,10 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
@@ -49,7 +49,7 @@ jobs:
           rm wit-bindgen-go
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wit-bindgen-go_${{ matrix.goos }}_${{ matrix.goarch }}
           path: build/wit-bindgen-go-${{ matrix.goos }}-${{ matrix.goarch }}.tgz
@@ -61,10 +61,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Download Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: build/
           merge-multiple: true # all artifacts are downloaded to this directory
