@@ -32,10 +32,20 @@ func TestPackagePath(t *testing.T) {
 
 func TestPackagePathNestedModule(t *testing.T) {
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/plugin\n\ngo 1.26.0\n"), 0o600); err != nil {
+	module := filepath.Join(root, "go.mod")
+	internal := filepath.Join(root, "internal")
+	nested := filepath.Join(internal, "bindings")
+	// TinyGo's Windows RemoveAll cannot enumerate directories.
+	t.Cleanup(func() {
+		for _, path := range []string{nested, internal, module, root} {
+			if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+				t.Errorf("remove test fixture %s: %v", path, err)
+			}
+		}
+	})
+	if err := os.WriteFile(module, []byte("module example.com/plugin\n\ngo 1.26.0\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	nested := filepath.Join(root, "internal", "bindings")
 	if err := os.MkdirAll(nested, 0o700); err != nil {
 		t.Fatal(err)
 	}
