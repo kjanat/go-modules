@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tetratelabs/wazero/sys"
+	"github.com/kjanat/wazero/sys"
 	"go-modules.kjanat.dev/internal/wasmtools"
 )
 

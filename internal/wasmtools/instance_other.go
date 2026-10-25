@@ -16,8 +16,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/tetratelabs/wazero"
-	"github.com/tetratelabs/wazero/imports/wasi_snapshot_preview1"
+	"github.com/kjanat/wazero"
+	"github.com/kjanat/wazero/imports/wasi_snapshot_preview1"
 	"go-modules.kjanat.dev/internal/module"
 )
 

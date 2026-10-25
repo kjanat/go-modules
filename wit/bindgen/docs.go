@@ -13,7 +13,7 @@ func formatDocComments(s string, indent bool) string {
 func processMarkdown(s string) string {
 	var lines []string
 	var indent bool
-	for _, line := range strings.Split(s, "\n") {
+	for line := range strings.SplitSeq(s, "\n") {
 		if strings.HasPrefix(line, "```") {
 			indent = !indent
 			line = ""

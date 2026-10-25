@@ -20,7 +20,7 @@ import (
 	"testing/fstest"
 	"time"
 
-	"github.com/tetratelabs/wazero/sys"
+	"github.com/kjanat/wazero/sys"
 	"go-modules.kjanat.dev/internal/codec"
 	"go-modules.kjanat.dev/internal/go/gen"
 	"go-modules.kjanat.dev/internal/stringio"
@@ -143,7 +143,7 @@ func newGenerator(res *wit.Resolve, opts ...Option) (*generator, error) {
 		lowerFunctions: make(map[typeUse]function),
 		liftFunctions:  make(map[typeUse]function),
 	}
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		g.types[i] = make(map[*wit.TypeDef]*typeDecl)
 		g.functions[i] = make(map[*wit.Function]*funcDecl)
 		g.defined[i] = make(map[wit.Node]bool)

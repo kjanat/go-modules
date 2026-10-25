@@ -20,7 +20,7 @@ func TestMap(t *testing.T) {
 	}
 
 	// Test values
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		got, want := m.Get(i), i
 		if got != want {
 			t.Errorf("m.Get(%d): %d, expected %d", i, got, want)
