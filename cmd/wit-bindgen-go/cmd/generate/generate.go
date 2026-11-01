@@ -9,11 +9,11 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"go-modules.kjanat.dev/internal/codec"
-	"go-modules.kjanat.dev/internal/go/gen"
-	"go-modules.kjanat.dev/internal/witcli"
-	"go-modules.kjanat.dev/wit/bindgen"
-	"go-modules.kjanat.dev/wit/logging"
+	"github.com/kjanat/go-modules/internal/codec"
+	"github.com/kjanat/go-modules/internal/go/gen"
+	"github.com/kjanat/go-modules/internal/witcli"
+	"github.com/kjanat/go-modules/wit/bindgen"
+	"github.com/kjanat/go-modules/wit/logging"
 )
 
 // Command is the CLI command for wit.

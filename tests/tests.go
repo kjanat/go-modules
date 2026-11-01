@@ -6,4 +6,4 @@ package tests
 
 //go:generate rm -rf ./generated/*
 //go:generate mkdir -p ./generated
-//go:generate go run go-modules.kjanat.dev/cmd/wit-bindgen-go generate --versioned -o ./generated ../testdata/wasi/cli.wit.json
+//go:generate go run github.com/kjanat/go-modules/cmd/wit-bindgen-go generate --versioned -o ./generated ../testdata/wasi/cli.wit.json

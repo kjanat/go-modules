@@ -7,9 +7,9 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"go-modules.kjanat.dev/cmd/wit-bindgen-go/cmd/generate"
-	"go-modules.kjanat.dev/cmd/wit-bindgen-go/cmd/wit"
-	"go-modules.kjanat.dev/internal/module"
+	"github.com/kjanat/go-modules/cmd/wit-bindgen-go/cmd/generate"
+	"github.com/kjanat/go-modules/cmd/wit-bindgen-go/cmd/wit"
+	"github.com/kjanat/go-modules/internal/module"
 )
 
 func main() {

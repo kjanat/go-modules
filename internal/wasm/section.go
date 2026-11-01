@@ -3,7 +3,7 @@ package wasm
 import (
 	"bytes"
 
-	"go-modules.kjanat.dev/internal/wasm/uleb128"
+	"github.com/kjanat/go-modules/internal/wasm/uleb128"
 )
 
 // SectionID represents a WebAssembly [section SectionID].

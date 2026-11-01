@@ -3,7 +3,7 @@ package witcli
 import (
 	"os"
 
-	"go-modules.kjanat.dev/wit/logging"
+	"github.com/kjanat/go-modules/wit/logging"
 )
 
 // Logger returns a [logging.Logger] that outputs to stdout.

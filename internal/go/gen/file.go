@@ -6,7 +6,7 @@ import (
 	"go/format"
 	"strings"
 
-	"go-modules.kjanat.dev/internal/codec"
+	"github.com/kjanat/go-modules/internal/codec"
 )
 
 // File represents a generated file. It may be a Go file

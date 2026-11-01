@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"go-modules.kjanat.dev/internal/relpath"
-	"go-modules.kjanat.dev/internal/wasmtools"
+	"github.com/kjanat/go-modules/internal/relpath"
+	"github.com/kjanat/go-modules/internal/wasmtools"
 
 	"github.com/sergi/go-diff/diffmatchpatch"
 )

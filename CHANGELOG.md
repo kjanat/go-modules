@@ -2,6 +2,12 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- Import the fork as `github.com/kjanat/go-modules` again. Versions published as `go-modules.kjanat.dev` keep their original module path. The separate `go.bytecodealliance.org/cm` module stays upstream.
+
 ## [v0.8.0] - 2026-10-24
 
 ### Changed

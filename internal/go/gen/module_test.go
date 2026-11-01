@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"go-modules.kjanat.dev/internal/relpath"
+	"github.com/kjanat/go-modules/internal/relpath"
 )
 
 func TestPackagePath(t *testing.T) {
@@ -18,7 +18,7 @@ func TestPackagePath(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	want := "go-modules.kjanat.dev/internal/go/gen"
+	want := "github.com/kjanat/go-modules/internal/go/gen"
 	if got != want {
 		t.Errorf("PackagePath(%q): got %s, expected %s", wd, got, want)
 	}

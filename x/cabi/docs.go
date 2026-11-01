@@ -2,7 +2,7 @@
 //
 // To use, import this package with _:
 //
-//	import _ "go-modules.kjanat.dev/x/cabi"
+//	import _ "github.com/kjanat/go-modules/x/cabi"
 //
 // Function realloc is a WebAssembly [core function] that is validated to have the following core function type:
 //
