@@ -13,3 +13,7 @@ codegen-units = 1 # compile with a single codegen unit
 opt-level = 'z' # optimize for size
 panic = 'abort' # panic=abort will remove the panic code
 strip = true # strip the debug information
+
+[patch.crates-io]
+wit-parser = { path = "vendor/wit-parser-0.232.0" }
+wasmparser = { path = "vendor/wasmparser-0.232.0" }
