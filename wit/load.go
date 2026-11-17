@@ -27,34 +27,49 @@ func LoadJSON(path string) (*Resolve, error) {
 	return DecodeJSON(f)
 }
 
-// LoadWIT loads [WIT] data from path by processing it through [wasm-tools].
-// This will fail if wasm-tools is not in $PATH.
+// LoadWIT loads [WIT] data from path using the embedded [wasm-tools].
+// Use [LoadWITContext] to cancel compilation and execution.
 //
 // [WIT]: https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md
 // [wasm-tools]: https://crates.io/crates/wasm-tools
 func LoadWIT(path string) (*Resolve, error) {
-	return loadWIT(path, nil)
+	return LoadWITContext(context.Background(), path)
 }
 
-// DecodeWIT decodes [WIT] data from Reader r by processing it through [wasm-tools].
-// This will fail if wasm-tools is not in $PATH.
+// LoadWITContext loads WIT data from path using the embedded wasm-tools.
+// Cancelling ctx interrupts compilation and guest execution.
+func LoadWITContext(ctx context.Context, path string) (*Resolve, error) {
+	return loadWIT(ctx, path, nil)
+}
+
+// DecodeWIT decodes [WIT] data from Reader r using the embedded [wasm-tools].
+// Use [DecodeWITContext] to cancel compilation and execution.
 //
 // [WIT]: https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md
 // [wasm-tools]: https://crates.io/crates/wasm-tools
 func DecodeWIT(r io.Reader) (*Resolve, error) {
-	return loadWIT("", r)
+	return DecodeWITContext(context.Background(), r)
+}
+
+// DecodeWITContext decodes WIT data from r using the embedded wasm-tools.
+// Cancelling ctx interrupts compilation and guest execution. A blocking Read
+// must be interrupted separately, for example by closing a caller-owned reader.
+func DecodeWITContext(ctx context.Context, r io.Reader) (*Resolve, error) {
+	return loadWIT(ctx, "", r)
 }
 
 // loadWIT loads WIT data from path or reader by processing it through wasm-tools.
 // It accepts either a path or an io.Reader as input, but not both.
 // If the path is not "" and "-", it will be used as the input file.
 // Otherwise, the reader will be used as the input.
-func loadWIT(path string, reader io.Reader) (*Resolve, error) {
+func loadWIT(ctx context.Context, path string, reader io.Reader) (*Resolve, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if path != "" && reader != nil {
 		return nil, errors.New("cannot set both path and reader; provide only one")
 	}
 
-	ctx := context.Background()
 	args := []string{"component", "wit", "-j", "--all-features"}
 	fsMap := make(map[string]fs.FS)
 	var stdin io.Reader
@@ -69,12 +84,15 @@ func loadWIT(path string, reader io.Reader) (*Resolve, error) {
 	}
 	wasmTools, err := wasmtools.New(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, ctx.Err())
 	}
-	defer wasmTools.Close(ctx)
+	defer wasmTools.Close(context.WithoutCancel(ctx))
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
 	err = wasmTools.Run(ctx, stdin, stdout, stderr, fsMap, args...)
+	if ctx.Err() != nil {
+		return nil, errors.Join(err, ctx.Err())
+	}
 	if err != nil {
 		if _, ok := err.(*sys.ExitError); ok {
 			return nil, fmt.Errorf("wasm-tools: %s", stderr.String())

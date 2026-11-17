@@ -25,15 +25,15 @@ func LoadWIT(ctx context.Context, path string, r io.Reader, forceWIT bool) (*wit
 		if b, err := oci.PullWIT(ctx, path); err != nil {
 			return nil, err
 		} else {
-			return wit.DecodeWIT(bytes.NewReader(b))
+			return wit.DecodeWITContext(ctx, bytes.NewReader(b))
 		}
 	}
 	forceReader := path == "" || path == "-"
 	if forceWIT || (!forceReader && !strings.HasSuffix(path, ".json")) {
 		if forceReader {
-			return wit.DecodeWIT(r)
+			return wit.DecodeWITContext(ctx, r)
 		}
-		return wit.LoadWIT(path)
+		return wit.LoadWITContext(ctx, path)
 	}
 	if forceReader {
 		return wit.DecodeJSON(r)
