@@ -58,12 +58,17 @@ type Instance struct {
 }
 
 // New creates a new wazero instance.
-func New(ctx context.Context) (*Instance, error) {
+func New(ctx context.Context) (_ *Instance, err error) {
 	c := wazero.NewRuntimeConfig().
 		WithCloseOnContextDone(true).
 		WithCompilationCache(compilationCache())
 
 	r := wazero.NewRuntimeWithConfig(ctx, c)
+	defer func() {
+		if err != nil {
+			_ = r.Close(context.WithoutCancel(ctx))
+		}
+	}()
 	if _, err := wasi_snapshot_preview1.Instantiate(ctx, r); err != nil {
 		return nil, fmt.Errorf("error instantiating WASI: %w", err)
 	}

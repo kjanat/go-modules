@@ -3,9 +3,14 @@
 package wit
 
 import (
+	"context"
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestLoadWITPaths(t *testing.T) {
@@ -57,6 +62,56 @@ func TestLoadWITPaths(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLoadWITContextCancelled(t *testing.T) {
+	for _, expired := range []bool{false, true} {
+		ctx, cancel := context.WithCancel(t.Context())
+		want := context.Canceled
+		if expired {
+			cancel()
+			ctx, cancel = context.WithDeadline(t.Context(), time.Now().Add(-time.Second))
+			want = context.DeadlineExceeded
+		}
+		cancel()
+		for _, load := range []func() (*Resolve, error){
+			func() (*Resolve, error) { return LoadWITContext(ctx, "missing.wit") },
+			func() (*Resolve, error) {
+				return DecodeWITContext(ctx, strings.NewReader("package example:cancel; world example {}"))
+			},
+		} {
+			resolved, err := load()
+			if resolved != nil || !errors.Is(err, want) {
+				t.Fatalf("got (%v, %v), want cancellation %v", resolved, err, want)
+			}
+		}
+	}
+}
+
+func TestDecodeWITContextCancelledDuringExecution(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	reader := &cancellingWITReader{Reader: strings.NewReader("package example:cancel; world example {}"), cancel: cancel}
+	resolved, err := DecodeWITContext(ctx, reader)
+	if resolved != nil || !errors.Is(err, context.Canceled) {
+		t.Fatalf("got (%v, %v), want cancellation after the guest reads stdin", resolved, err)
+	}
+	// Cancellation must leave subsequent, independent loads usable.
+	resolved, err = DecodeWITContext(t.Context(), strings.NewReader("package example:cancel; world example {}"))
+	if err != nil || len(resolved.Worlds) != 1 || resolved.Worlds[0].Name != "example" {
+		t.Fatalf("load after cancellation: %v, %v", resolved, err)
+	}
+}
+
+type cancellingWITReader struct {
+	io.Reader
+	cancel context.CancelFunc
+}
+
+func (r *cancellingWITReader) Read(p []byte) (int, error) {
+	n, err := r.Reader.Read(p)
+	r.cancel()
+	return n, err
 }
 
 func TestLoadWITDirectoryDependencies(t *testing.T) {
