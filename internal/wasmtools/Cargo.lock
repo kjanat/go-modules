@@ -627,8 +627,6 @@ dependencies = [
 [[package]]
 name = "wasmparser"
 version = "0.232.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "917739b33bb1eb0e9a49bcd2637a351931be4578d0cc4d37b908d7a797784fbb"
 dependencies = [
  "bitflags",
  "hashbrown",
@@ -798,8 +796,6 @@ dependencies = [
 [[package]]
 name = "wit-parser"
 version = "0.232.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "00a0e031533e3f9082057b09b346f76d3af12a714feccbe8d32f926254319d86"
 dependencies = [
  "anyhow",
  "id-arena",
