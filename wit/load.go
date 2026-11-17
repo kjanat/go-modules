@@ -28,7 +28,7 @@ func LoadJSON(path string) (*Resolve, error) {
 }
 
 // LoadWIT loads [WIT] data from path using the embedded [wasm-tools].
-// Use [LoadWITContext] to cancel compilation and execution.
+// Use [LoadWITContext] to cancel guest execution.
 //
 // [WIT]: https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md
 // [wasm-tools]: https://crates.io/crates/wasm-tools
@@ -37,13 +37,14 @@ func LoadWIT(path string) (*Resolve, error) {
 }
 
 // LoadWITContext loads WIT data from path using the embedded wasm-tools.
-// Cancelling ctx interrupts compilation and guest execution.
+// Cancelling ctx interrupts guest execution. Compilation of the embedded
+// wasm-tools module does not observe ctx, so a cold compile completes first.
 func LoadWITContext(ctx context.Context, path string) (*Resolve, error) {
 	return loadWIT(ctx, path, nil)
 }
 
 // DecodeWIT decodes [WIT] data from Reader r using the embedded [wasm-tools].
-// Use [DecodeWITContext] to cancel compilation and execution.
+// Use [DecodeWITContext] to cancel guest execution.
 //
 // [WIT]: https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md
 // [wasm-tools]: https://crates.io/crates/wasm-tools
@@ -52,8 +53,10 @@ func DecodeWIT(r io.Reader) (*Resolve, error) {
 }
 
 // DecodeWITContext decodes WIT data from r using the embedded wasm-tools.
-// Cancelling ctx interrupts compilation and guest execution. A blocking Read
+// Cancelling ctx interrupts guest execution. A blocking Read
 // must be interrupted separately, for example by closing a caller-owned reader.
+// Compilation of the embedded wasm-tools module does not observe ctx, so a
+// cold compile completes first.
 func DecodeWITContext(ctx context.Context, r io.Reader) (*Resolve, error) {
 	return loadWIT(ctx, "", r)
 }
