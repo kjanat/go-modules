@@ -11,8 +11,8 @@ require (
 	github.com/sergi/go-diff v1.3.1
 	github.com/urfave/cli/v3 v3.3.8
 	go.bytecodealliance.org/cm v0.3.0
-	golang.org/x/mod v0.24.0
-	golang.org/x/tools v0.33.0
+	golang.org/x/mod v0.42.0
+	golang.org/x/tools v0.52.0
 )
 
 require (
@@ -21,6 +21,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
-	golang.org/x/sync v0.14.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
 )
