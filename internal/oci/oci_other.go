@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/kjanat/go-modules/internal/ctxerr"
 	"github.com/regclient/regclient"
 	"github.com/regclient/regclient/types/manifest"
 	"github.com/regclient/regclient/types/ref"
@@ -34,12 +35,15 @@ func PullWIT(ctx context.Context, path string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to parse ref: %v", err)
 	}
 
-	rc := regclient.New()
+	return pullWIT(ctx, regclient.New(), r)
+}
+
+func pullWIT(ctx context.Context, rc *regclient.RegClient, r ref.Ref) ([]byte, error) {
 	defer rc.Close(ctx, r)
 
 	m, err := rc.ManifestGet(ctx, r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get manifest: %v", err)
+		return nil, fmt.Errorf("failed to get manifest: %w", ctxerr.Join(ctx, err))
 	}
 
 	mi, ok := m.(manifest.Imager)
@@ -63,7 +67,7 @@ func PullWIT(ctx context.Context, path string) ([]byte, error) {
 
 	rdr, err := rc.BlobGet(ctx, r, layer)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch blob: %v", err)
+		return nil, fmt.Errorf("failed to fetch blob: %w", ctxerr.Join(ctx, err))
 	}
 	defer rdr.Close()
 
@@ -71,7 +75,7 @@ func PullWIT(ctx context.Context, path string) ([]byte, error) {
 	var buf bytes.Buffer
 	_, err = io.Copy(&buf, rdr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read blob content: %v", err)
+		return nil, fmt.Errorf("failed to read blob content: %w", ctxerr.Join(ctx, err))
 	}
 	return buf.Bytes(), nil
 }

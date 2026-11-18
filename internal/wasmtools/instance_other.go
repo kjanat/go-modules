@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/rand"
 	_ "embed"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -58,22 +59,32 @@ type Instance struct {
 }
 
 // New creates a new wazero instance.
-func New(ctx context.Context) (_ *Instance, err error) {
+func New(ctx context.Context) (*Instance, error) {
+	return newInstance(ctx, newRuntime(ctx), decompress)
+}
+
+func newRuntime(ctx context.Context) wazero.Runtime {
 	c := wazero.NewRuntimeConfig().
 		WithCloseOnContextDone(true).
 		WithCompilationCache(compilationCache())
 
-	r := wazero.NewRuntimeWithConfig(ctx, c)
+	return wazero.NewRuntimeWithConfig(ctx, c)
+}
+
+// newInstance takes ownership of r, including on initialization failure.
+func newInstance(ctx context.Context, r wazero.Runtime, binary func() ([]byte, error)) (_ *Instance, err error) {
 	defer func() {
 		if err != nil {
-			_ = r.Close(context.WithoutCancel(ctx))
+			if closeErr := r.Close(context.WithoutCancel(ctx)); closeErr != nil {
+				err = errors.Join(err, fmt.Errorf("closing wasm-tools runtime: %w", closeErr))
+			}
 		}
 	}()
 	if _, err := wasi_snapshot_preview1.Instantiate(ctx, r); err != nil {
 		return nil, fmt.Errorf("error instantiating WASI: %w", err)
 	}
 
-	wasmTools, err := decompress()
+	wasmTools, err := binary()
 	if err != nil {
 		return nil, err
 	}
