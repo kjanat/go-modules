@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kjanat/go-modules/internal/ctxerr"
 	"github.com/kjanat/go-modules/internal/wasmtools"
 	"github.com/kjanat/wazero/sys"
 )
@@ -89,7 +90,9 @@ func loadWIT(ctx context.Context, path string, reader io.Reader) (*Resolve, erro
 		stdin = reader
 	}
 	var stdout bytes.Buffer
-	if err := runWIT(ctx, stdin, &stdout, fsMap, args); err != nil {
+	// Runtime teardown can cancel the request even after the guest failed.
+	err := runWIT(ctx, stdin, &stdout, fsMap, args)
+	if err := ctxerr.Join(ctx, err); err != nil {
 		return nil, err
 	}
 	return decodeWITOutput(ctx, &stdout)
@@ -99,7 +102,7 @@ func loadWIT(ctx context.Context, path string, reader io.Reader) (*Resolve, erro
 func runWIT(ctx context.Context, stdin io.Reader, stdout io.Writer, fsMap map[string]fs.FS, args []string) (err error) {
 	tool, err := wasmtools.New(ctx)
 	if err != nil {
-		return errors.Join(err, ctx.Err())
+		return err
 	}
 	defer func() {
 		if closeErr := tool.Close(context.WithoutCancel(ctx)); closeErr != nil {
@@ -108,11 +111,8 @@ func runWIT(ctx context.Context, stdin io.Reader, stdout io.Writer, fsMap map[st
 	}()
 	var stderr bytes.Buffer
 	err = tool.Run(ctx, stdin, stdout, &stderr, fsMap, args...)
-	if cause := ctx.Err(); cause != nil {
-		return errors.Join(err, cause)
-	}
 	if err != nil {
-		if _, ok := err.(*sys.ExitError); ok {
+		if exit, ok := err.(*sys.ExitError); ok && !errors.Is(exit, context.Canceled) && !errors.Is(exit, context.DeadlineExceeded) {
 			return fmt.Errorf("wasm-tools: %s", stderr.String())
 		}
 		return fmt.Errorf("wasm-tools: %w", err)
@@ -123,8 +123,8 @@ func runWIT(ctx context.Context, stdin io.Reader, stdout io.Writer, fsMap map[st
 func decodeWITOutput(ctx context.Context, r io.Reader) (*Resolve, error) {
 	res, err := DecodeJSON(contextReader{ctx, r})
 	// The decoder may finish entirely from its last buffered read.
-	if cause := ctx.Err(); cause != nil {
-		return nil, errors.Join(err, cause)
+	if ctx.Err() != nil {
+		return nil, ctxerr.Join(ctx, err)
 	}
 	return res, err
 }

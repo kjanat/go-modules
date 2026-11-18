@@ -6,8 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
-- Close the embedded WIT runtime before decoding its JSON output. Context-aware WIT loads now observe cancellation during JSON reads and before returning the result, and report runtime cleanup errors.
-- Preserve cancellation errors from OCI manifest and blob fetches so CLI callers can match them with `errors.Is`.
+- Close the embedded WIT runtime before decoding its JSON output. Context-aware WIT loads now observe cancellation during JSON reads and before returning the result, and preserve guest and cleanup diagnostics if cancellation arrives during runtime teardown.
+- Preserve both cancellation and the underlying HTTP or short-read error when an OCI manifest or blob request is interrupted. CLI callers can match either with `errors.Is`.
 
 ## [v0.9.2] — 2026-11-18
 

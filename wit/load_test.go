@@ -172,3 +172,21 @@ func TestDecodeWITOutputCancellation(t *testing.T) {
 		})
 	}
 }
+
+func TestDecodeWITCancelledWhileClosingAfterGuestError(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+	inClose := false
+	ctx = experimental.WithCloseNotifier(ctx, experimental.CloseNotifyFunc(func(closeCtx context.Context, _ uint32) {
+		// The loader detaches the context for runtime teardown, after Run
+		// has returned the guest's stderr. Ignore earlier module closes.
+		if closeCtx.Done() == nil {
+			inClose = true
+			cancel()
+		}
+	}))
+	res, err := DecodeWITContext(ctx, strings.NewReader("package example:broken; world ?"))
+	if !inClose || res != nil || !errors.Is(err, context.Canceled) || !strings.Contains(err.Error(), "world ?") {
+		t.Fatalf("cancelled in close=%v, result=(%v, %v); want guest diagnostic and cancellation", inClose, res, err)
+	}
+}
