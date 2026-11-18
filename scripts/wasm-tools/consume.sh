@@ -1,5 +1,5 @@
 set -euo pipefail
-: "${GH_TOKEN:?Set RENOVATE_TOKEN to a bot token with contents and pull request write access}"
+: "${GH_TOKEN:?Missing GitHub Actions job token}"
 tag=$(cat candidate/tag)
 branch="update/${tag}"
 gh auth setup-git

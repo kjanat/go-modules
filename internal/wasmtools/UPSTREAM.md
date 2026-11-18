@@ -3,12 +3,13 @@
 Go builds embed the checked-in WASI Preview 1 guest. Installing the Go module
 does not download wasm-tools, compile Rust, or access GitHub Releases.
 
-The Monday Renovate workflow (also manually dispatchable) updates the exact
-wasm-tools dependency in Cargo.toml and Cargo.lock. The temporary Cargo patch
-for 1.263.0 supplies upstream's post-release parser-limit fixes. A newer exact
-version can resolve from crates.io without that patch. Set the repository or
-organization Actions secret `RENOVATE_TOKEN` to a bot token with contents and
-pull-request write access; workflow write access is needed for action updates.
+The installed Renovate GitHub App uses the Monday update window in
+renovate.json (Europe/Amsterdam) to propose Cargo.toml and Cargo.lock updates.
+The temporary 1.263.0 Cargo patch supplies upstream's post-release parser
+fixes; a newer exact version can resolve from crates.io without that patch.
+The downstream release workflow uses its GitHub Actions job token. Repository
+settings must allow Actions to create pull requests. GitHub may require approval
+to start checks on that Actions-created consumption PR.
 
 On a candidate PR, CI runs `make wasm-tools` (Cargo --locked, with the Rust
 toolchain and WASI target from rust-toolchain.toml), then runs the Go tests

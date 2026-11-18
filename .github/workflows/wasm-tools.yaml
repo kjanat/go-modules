@@ -49,6 +49,7 @@ jobs:
     permissions:
       actions: read
       contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -85,5 +86,5 @@ jobs:
         run: bash scripts/wasm-tools/release.sh
       - name: Propose the embedded guest update
         env:
-          GH_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: bash scripts/wasm-tools/consume.sh
