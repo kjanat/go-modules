@@ -21,8 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
+        with: { go-version-file: go.mod }
       - name: Build guest from locked sources
         run: make wasm-tools
       - name: Exercise candidate through the Go host and generator
@@ -62,8 +61,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.number }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash -eu {0}
         run: |
-          set -eu
           name="wasm-tools-pr-$PR-$(git rev-parse 'HEAD^{tree}')"
           runs=$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/wasm-tools.yaml/runs" -f event=pull_request -f head_sha="$HEAD_SHA" -f status=success --jq '.workflow_runs[].id')
           for run in $runs; do
@@ -82,10 +81,8 @@ jobs:
           name: ${{ steps.tested.outputs.name }}
           path: candidate
       - name: Release the tested bytes
-        env:
-          GH_TOKEN: ${{ github.token }}
+        env: { GH_TOKEN: "${{ github.token }}" }
         run: bash scripts/wasm-tools/release.sh
       - name: Propose the embedded guest update
-        env:
-          GH_TOKEN: ${{ github.token }}
+        env: { GH_TOKEN: "${{ github.token }}" }
         run: bash scripts/wasm-tools/consume.sh
