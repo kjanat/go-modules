@@ -2,7 +2,27 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [v0.9.2] — 2026-11-18
+
+### Added
+
+- Use `LoadWITContext` and `DecodeWITContext` to cancel execution of the embedded `wasm-tools` guest. The CLI now passes its context through. Cold compilation and blocked reads are outside this cancellation boundary.
+
+### Changed
+
+- Run the embedded tool with `github.com/kjanat/wazero` v1.12.2.
+
+### Fixed
+
+- Bound parser nesting and binary section allocation without changing the WIT syntax accepted by `wasm-tools` 1.232.0. Check component section lengths before arithmetic can overflow on Wasm32.
+
+## [v0.9.1] — 2026-11-02
+
+### Changed
+
+- Pin `github.com/kjanat/wazero` to the v1.11.1 tag.
+
+## [v0.9.0] — 2026-11-02
 
 ### Changed
 
@@ -278,7 +298,9 @@ Initial version, supporting [TinyGo](https://tinygo.org/) + [WASI](https://wasi.
 - Because Go does not have a native tagged union type, pointers represented in `variant` and `result` types may not be visible to the garbage collector and may be freed while still in use.
 - Support for mainline [Go](https://go.dev/).
 
-[Unreleased]: <https://github.com/bytecodealliance/go-modules/compare/v0.7.0..HEAD>
+[v0.9.2]: <https://github.com/kjanat/go-modules/compare/v0.9.1...v0.9.2>
+[v0.9.1]: <https://github.com/kjanat/go-modules/compare/v0.9.0...v0.9.1>
+[v0.9.0]: <https://github.com/kjanat/go-modules/compare/v0.8.0...v0.9.0>
 [v0.7.0]: <https://github.com/bytecodealliance/go-modules/compare/v0.6.2..v0.7.0>
 [v0.6.2]: <https://github.com/bytecodealliance/go-modules/compare/v0.6.1..v0.6.2>
 [v0.6.1]: <https://github.com/bytecodealliance/go-modules/compare/v0.6.0..v0.6.1>
