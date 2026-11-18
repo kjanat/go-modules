@@ -1,0 +1,26 @@
+{
+  "$schema": "https://beepboop.kjanat.dev/schema/v1.json",
+  "streams": {
+    "main": {
+      "packages": ["pkg:golang/github.com/kjanat/go-modules"],
+      "versionScope": "one-for-stream",
+      "mustPublish": ["pkg:golang/github.com/kjanat/go-modules"],
+      "versionSource": {
+        "kind": "tags",
+        "prefix": "v"
+      },
+      "workflows": {
+        "release": {
+          "file": "release.yaml",
+          "mode": "observe",
+          "ref": "refs/tags/v*",
+          "publications": [
+            "pkg:golang/github.com/kjanat/go-modules",
+            "pkg:github/kjanat/go-modules"
+          ]
+        }
+      }
+    }
+  },
+  "managers": ["go", "workflow"]
+}
