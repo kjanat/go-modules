@@ -17,9 +17,9 @@ interface a {
 
 	handle: func(r: request) -> response;
 
-	record empty {}
+	record single { value: u32 }
 
-	handle-empty: func(e: empty) -> empty;
+	handle-single: func(e: single) -> single;
 }
 
 world imports {

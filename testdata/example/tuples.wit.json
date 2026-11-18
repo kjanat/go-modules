@@ -23,29 +23,22 @@
     {
       "name": "tuples",
       "types": {
-        "t0": 0,
-        "t1": 1,
-        "t2": 2,
-        "t3": 3,
-        "t4": 4,
-        "t5": 5,
-        "t6": 6,
-        "t7": 7,
-        "t8": 8,
-        "t9": 9,
-        "t10": 10
+        "t1": 0,
+        "t2": 1,
+        "t3": 2,
+        "t4": 3,
+        "t5": 4,
+        "t6": 5,
+        "t7": 6,
+        "t8": 7,
+        "t9": 8,
+        "t10": 9
       },
       "functions": {
         "f0": {
           "name": "f0",
           "kind": "freestanding",
-          "params": [
-            {
-              "name": "t",
-              "type": 0
-            }
-          ],
-          "result": 11
+          "params": []
         },
         "f1": {
           "name": "f1",
@@ -53,10 +46,10 @@
           "params": [
             {
               "name": "t",
-              "type": 1
+              "type": 0
             }
           ],
-          "result": 12
+          "result": 10
         },
         "f2": {
           "name": "f2",
@@ -64,10 +57,10 @@
           "params": [
             {
               "name": "t",
-              "type": 2
+              "type": 1
             }
           ],
-          "result": 13
+          "result": 11
         },
         "f3": {
           "name": "f3",
@@ -75,10 +68,10 @@
           "params": [
             {
               "name": "t",
-              "type": 3
+              "type": 2
             }
           ],
-          "result": 14
+          "result": 12
         },
         "f4": {
           "name": "f4",
@@ -86,10 +79,10 @@
           "params": [
             {
               "name": "t",
-              "type": 4
+              "type": 3
             }
           ],
-          "result": 15
+          "result": 13
         },
         "f5": {
           "name": "f5",
@@ -97,10 +90,10 @@
           "params": [
             {
               "name": "t",
-              "type": 5
+              "type": 4
             }
           ],
-          "result": 16
+          "result": 14
         },
         "f6": {
           "name": "f6",
@@ -108,10 +101,10 @@
           "params": [
             {
               "name": "t",
-              "type": 6
+              "type": 5
             }
           ],
-          "result": 17
+          "result": 15
         },
         "f7": {
           "name": "f7",
@@ -119,10 +112,10 @@
           "params": [
             {
               "name": "t",
-              "type": 7
+              "type": 6
             }
           ],
-          "result": 18
+          "result": 16
         },
         "f8": {
           "name": "f8",
@@ -130,10 +123,10 @@
           "params": [
             {
               "name": "t",
-              "type": 8
+              "type": 7
             }
           ],
-          "result": 19
+          "result": 17
         },
         "f9": {
           "name": "f9",
@@ -141,10 +134,10 @@
           "params": [
             {
               "name": "t",
-              "type": 9
+              "type": 8
             }
           ],
-          "result": 20
+          "result": 18
         },
         "f10": {
           "name": "f10",
@@ -152,13 +145,29 @@
           "params": [
             {
               "name": "t",
-              "type": 10
+              "type": 9
             }
           ],
-          "result": 21
+          "result": 19
         },
         "g0": {
           "name": "g0",
+          "kind": "freestanding",
+          "params": []
+        },
+        "g1": {
+          "name": "g1",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "t",
+              "type": 10
+            }
+          ],
+          "result": 10
+        },
+        "g2": {
+          "name": "g2",
           "kind": "freestanding",
           "params": [
             {
@@ -168,8 +177,8 @@
           ],
           "result": 11
         },
-        "g1": {
-          "name": "g1",
+        "g3": {
+          "name": "g3",
           "kind": "freestanding",
           "params": [
             {
@@ -179,8 +188,8 @@
           ],
           "result": 12
         },
-        "g2": {
-          "name": "g2",
+        "g4": {
+          "name": "g4",
           "kind": "freestanding",
           "params": [
             {
@@ -190,8 +199,8 @@
           ],
           "result": 13
         },
-        "g3": {
-          "name": "g3",
+        "g5": {
+          "name": "g5",
           "kind": "freestanding",
           "params": [
             {
@@ -201,8 +210,8 @@
           ],
           "result": 14
         },
-        "g4": {
-          "name": "g4",
+        "g6": {
+          "name": "g6",
           "kind": "freestanding",
           "params": [
             {
@@ -212,8 +221,8 @@
           ],
           "result": 15
         },
-        "g5": {
-          "name": "g5",
+        "g7": {
+          "name": "g7",
           "kind": "freestanding",
           "params": [
             {
@@ -223,8 +232,8 @@
           ],
           "result": 16
         },
-        "g6": {
-          "name": "g6",
+        "g8": {
+          "name": "g8",
           "kind": "freestanding",
           "params": [
             {
@@ -234,8 +243,8 @@
           ],
           "result": 17
         },
-        "g7": {
-          "name": "g7",
+        "g9": {
+          "name": "g9",
           "kind": "freestanding",
           "params": [
             {
@@ -245,8 +254,8 @@
           ],
           "result": 18
         },
-        "g8": {
-          "name": "g8",
+        "g10": {
+          "name": "g10",
           "kind": "freestanding",
           "params": [
             {
@@ -255,45 +264,12 @@
             }
           ],
           "result": 19
-        },
-        "g9": {
-          "name": "g9",
-          "kind": "freestanding",
-          "params": [
-            {
-              "name": "t",
-              "type": 20
-            }
-          ],
-          "result": 20
-        },
-        "g10": {
-          "name": "g10",
-          "kind": "freestanding",
-          "params": [
-            {
-              "name": "t",
-              "type": 21
-            }
-          ],
-          "result": 21
         }
       },
       "package": 0
     }
   ],
   "types": [
-    {
-      "name": "t0",
-      "kind": {
-        "tuple": {
-          "types": []
-        }
-      },
-      "owner": {
-        "interface": 0
-      }
-    },
     {
       "name": "t1",
       "kind": {
@@ -468,15 +444,6 @@
       "owner": {
         "interface": 0
       }
-    },
-    {
-      "name": null,
-      "kind": {
-        "tuple": {
-          "types": []
-        }
-      },
-      "owner": null
     },
     {
       "name": null,

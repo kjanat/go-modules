@@ -257,7 +257,12 @@
       "name": "t20",
       "kind": {
         "record": {
-          "fields": []
+          "fields": [
+            {
+              "name": "value",
+              "type": "u8"
+            }
+          ]
         }
       },
       "owner": {
@@ -356,7 +361,12 @@
       "name": "record",
       "kind": {
         "record": {
-          "fields": []
+          "fields": [
+            {
+              "name": "value",
+              "type": "u8"
+            }
+          ]
         }
       },
       "owner": {
@@ -367,7 +377,9 @@
       "name": "t26",
       "kind": {
         "tuple": {
-          "types": []
+          "types": [
+            "u8"
+          ]
         }
       },
       "owner": {
@@ -418,7 +430,11 @@
       "name": "t30",
       "kind": {
         "flags": {
-          "flags": []
+          "flags": [
+            {
+              "name": "present"
+            }
+          ]
         }
       },
       "owner": {

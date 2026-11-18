@@ -1,7 +1,7 @@
 package foo:multi-file;
 
 interface irrelevant-name {
-	record a-name {}
+	record a-name { value: u8 }
 }
 
 interface depend-on-me {

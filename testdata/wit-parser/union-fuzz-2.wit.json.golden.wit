@@ -5,6 +5,6 @@ world foo {
 }
 
 world bar {
-	record foo {}
+	record foo { value: u8 }
 	export foo: func() -> f32;
 }

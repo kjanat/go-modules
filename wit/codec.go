@@ -1,6 +1,7 @@
 package wit
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/coreos/go-semver/semver"
@@ -327,6 +328,8 @@ func (c *typeDefKindCodec) DecodeString(s string) error {
 	case "errorcontext", // https://github.com/bytecodealliance/wasm-tools/pull/1964
 		"error-context":
 		*c.v = ErrorContext{}
+	default:
+		return fmt.Errorf("unsupported WIT type kind %q", s)
 	}
 	return nil
 }
@@ -382,6 +385,8 @@ func (c *typeDefKindCodec) DecodeField(dec codec.Decoder, name string) error {
 		v := &Stream{}
 		err = dec.Decode(&v.Type)
 		*c.v = v
+	default:
+		return fmt.Errorf("unsupported WIT type kind %q", name)
 	}
 	return err
 }
@@ -601,6 +606,8 @@ func (c *functionKindCodec) DecodeString(s string) error {
 	switch s {
 	case "freestanding":
 		*c.v = &Freestanding{}
+	default:
+		return fmt.Errorf("unsupported WIT function kind %q", s)
 	}
 	return nil
 }
@@ -620,6 +627,8 @@ func (c *functionKindCodec) DecodeField(dec codec.Decoder, name string) error {
 		v := &Constructor{}
 		err = dec.Decode(&v.Type)
 		*c.v = v
+	default:
+		return fmt.Errorf("unsupported WIT function kind %q", name)
 	}
 	return err
 }

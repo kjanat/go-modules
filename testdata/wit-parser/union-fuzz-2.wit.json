@@ -41,7 +41,12 @@
       "name": "foo",
       "kind": {
         "record": {
-          "fields": []
+          "fields": [
+            {
+              "name": "value",
+              "type": "u8"
+            }
+          ]
         }
       },
       "owner": {

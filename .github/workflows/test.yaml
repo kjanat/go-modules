@@ -18,7 +18,7 @@ permissions:
 env:
   GOTOOLCHAIN: local
   go-modules: ./... ./cm/...
-  wasm-tools-version: "1.230.0"
+  wasm-tools-version: "1.263.0"
   wasmtime-version: "26.0.0"
 
 jobs:
@@ -133,6 +133,9 @@ jobs:
         uses: bytecodealliance/actions/wasm-tools/setup@v1
         with:
           version: ${{ env.wasm-tools-version }}
+
+      - name: Verify embedded wasm-tools version
+        run: test "$(go run ./internal/cmd/wasm-tools --version)" = "$(wasm-tools --version | cut -d' ' -f1-2)"
 
       - name: Set up Wasmtime
         uses: bytecodealliance/actions/wasmtime/setup@v1

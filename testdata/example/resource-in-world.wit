@@ -2,7 +2,7 @@ package example:resources-in-world;
 
 interface types {
 	resource foo {
-		foo: func();
+		ping: func();
 		bar: func(arg: u32);
 	}
 }
