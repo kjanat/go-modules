@@ -2,6 +2,13 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- Require Go 1.27.0 throughout the repository, including the standalone `cm` module, and use Go 1.27.4 for development and CI.
+- Update the OCI client to regclient v0.11.7, the CLI to urfave/cli v3.14.0, and the Go module and analysis libraries to x/mod v0.43.0 and x/tools v0.52.0.
+
 ## [v0.9.3] — 2026-11-18
 
 ### Fixed
