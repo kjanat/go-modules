@@ -123,10 +123,10 @@ func runWIT(ctx context.Context, stdin io.Reader, stdout io.Writer, fsMap map[st
 func decodeWITOutput(ctx context.Context, r io.Reader) (*Resolve, error) {
 	res, err := DecodeJSON(contextReader{ctx, r})
 	// The decoder may finish entirely from its last buffered read.
-	if ctx.Err() != nil {
-		return nil, ctxerr.Join(ctx, err)
+	if err := ctxerr.Join(ctx, err); err != nil {
+		return nil, err
 	}
-	return res, err
+	return res, nil
 }
 
 type contextReader struct {

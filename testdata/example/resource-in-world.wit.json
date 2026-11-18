@@ -26,8 +26,8 @@
         "foo": 0
       },
       "functions": {
-        "[method]foo.foo": {
-          "name": "[method]foo.foo",
+        "[method]foo.ping": {
+          "name": "[method]foo.ping",
           "kind": {
             "method": 0
           },

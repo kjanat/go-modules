@@ -58,12 +58,14 @@ jobs:
   release:
     name: Create GitHub release
     permissions:
-      contents: write
+      contents: read
+      id-token: write
     needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v7
+        with: { persist-credentials: false }
 
       - name: Download Artifacts
         uses: actions/download-artifact@v8
@@ -78,9 +80,14 @@ jobs:
           ./scripts/extract-changelog.sh "$TAG_NAME" > RELEASE_NOTES.md
           cat RELEASE_NOTES.md
 
+      - name: Get Beepboop publication token
+        id: beepboop
+        uses: kjanat/beepboop/actions/token@3a861875a1dd51f12d1e4f47d8c1bcbd68a7c665 # v1.10.7
+        with:
+          permission-contents: write
       - name: Create release
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.beepboop.outputs.token }}
         run: |
           ls -R build/
           TAG_NAME=${GITHUB_REF#refs/tags/}

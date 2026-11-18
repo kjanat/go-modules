@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Require Go 1.27.0 throughout the repository, including the standalone `cm` module, and use Go 1.27.4 for development and CI.
 - Update the OCI client to regclient v0.11.7, the CLI to urfave/cli v3.14.0, and the Go module and analysis libraries to x/mod v0.43.0 and x/tools v0.52.0.
+- Move the embedded WIT parser to wasm-tools 1.263.0 with upstream's parser limits. Text WIT must use non-empty records, tuples, and flags, and resource methods cannot reuse their resource's name. Use parameterless/resultless functions for unit signatures and rename colliding methods. These changes can affect a component interface; regenerate both sides of a changed contract.
+- Update the WIT test diff helper to go-diff v1.4.5.
 
 ## [v0.9.3] — 2026-11-18
 

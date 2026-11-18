@@ -26,7 +26,7 @@
         "value": 0,
         "request": 2,
         "response": 3,
-        "empty": 4
+        "single": 4
       },
       "functions": {
         "handle": {
@@ -40,8 +40,8 @@
           ],
           "result": 3
         },
-        "handle-empty": {
-          "name": "handle-empty",
+        "handle-single": {
+          "name": "handle-single",
           "kind": "freestanding",
           "params": [
             {
@@ -121,10 +121,15 @@
       }
     },
     {
-      "name": "empty",
+      "name": "single",
       "kind": {
         "record": {
-          "fields": []
+          "fields": [
+            {
+              "name": "value",
+              "type": "u32"
+            }
+          ]
         }
       },
       "owner": {

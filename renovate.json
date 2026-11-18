@@ -1,0 +1,17 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "forkProcessing": "enabled",
+  "timezone": "Europe/Amsterdam",
+  "schedule": ["* * * * 1"],
+  "enabledManagers": ["cargo", "gomod", "github-actions"],
+  "packageRules": [
+    {
+      "description": "Test upstream wasm-tools releases individually",
+      "matchManagers": ["cargo"],
+      "matchPackageNames": ["wasm-tools"],
+      "rangeStrategy": "pin",
+      "automerge": false
+    }
+  ]
+}

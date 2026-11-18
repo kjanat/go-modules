@@ -21,18 +21,18 @@ interface types {
 	type t16 = result<_, u32>;
 	type t17 = result<u32>;
 	type t18 = result;
-	record t20 {}
+	record t20 { value: u8 }
 	record t21 { a: u32 }
 	record t22 { a: u32 }
 	record t23 { a: u32, b: u64 }
 	record t24 { a: u32, b: u64 }
 	record t25 { x: u32 }
-	record %record {}
-	type t26 = tuple<>;
+	record %record { value: u8 }
+	type t26 = tuple<u8>;
 	type t27 = tuple<u32>;
 	type t28 = tuple<u32>;
 	type t29 = tuple<u32, u64>;
-	flags t30 { }
+	flags t30 { present }
 	flags t31 { a, b, c }
 	flags t32 { a, b, c }
 	variant t33 { a }

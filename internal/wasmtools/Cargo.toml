@@ -1,20 +1,18 @@
 [package]
-name = 'wasm-tools-go'
-edition = '2021'
+name = "embedded-wasm-tools"
+version = "0.0.0"
+edition = "2024"
+publish = false
 
-[dependencies]
-# Keep the embedded binary and vendored parser patches in sync; see UPSTREAM.md.
-wasm-tools = { version = '=1.232.0', default-features = false, features = [
-	'component',
-] }
+[build-dependencies]
+serde_json = "1"
+
+[target.'cfg(target_os = "wasi")'.dependencies]
+wasm-tools = { version = "=1.263.0", default-features = false, features = ["component"] }
 
 [profile.release]
-lto = true # compile with link-time optimization
-codegen-units = 1 # compile with a single codegen unit
-opt-level = 'z' # optimize for size
-panic = 'abort' # panic=abort will remove the panic code
-strip = true # strip the debug information
-
-[patch.crates-io]
-wit-parser = { path = "vendor/wit-parser-0.232.0" }
-wasmparser = { path = "vendor/wasmparser-0.232.0" }
+lto = true
+codegen-units = 1
+opt-level = "z"
+panic = "abort"
+strip = true

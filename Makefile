@@ -30,12 +30,8 @@ tests/generated: json
 
 # wasm-tools builds the internal/wasmtools/wasm-tools.wasm.gz artifact
 .PHONY: wasm-tools
-wasm-tools: internal/wasmtools/target/wasm32-wasip1/release/wasm-tools.wasm
-	gzip -n -c $< > internal/wasmtools/wasm-tools.wasm.gz
-
-internal/wasmtools/target/wasm32-wasip1/release/wasm-tools.wasm: internal/wasmtools/Cargo.* $(shell find internal/wasmtools/vendor -type f)
-	cd internal/wasmtools && \
-	cargo build --locked --target wasm32-wasip1 --release -p wasm-tools
+wasm-tools:
+	cd internal/wasmtools && cargo run --locked
 
 # internal/wasmtools/wasm-tools.wasm decompresses wasm-tools.wasm.gz for other make targets
 internal/wasmtools/wasm-tools.wasm: internal/wasmtools/wasm-tools.wasm.gz

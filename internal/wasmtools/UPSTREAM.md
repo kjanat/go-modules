@@ -1,37 +1,26 @@
-# Embedded WIT parser
+# Embedded wasm-tools
 
-The executable uses wasm-tools 1.232.0 with a local wit-parser 0.232.0 patch.
-The parser source comes from the published `wit-parser-0.232.0.crate`; the
-vendored copy retains the library source, manifest, README and upstream licenses.
-The Cargo manifest uses a path override so the executable and its source match.
+Go builds embed the checked-in WASI Preview 1 guest. Installing the Go module
+does not download wasm-tools, compile Rust, or access GitHub Releases.
 
-The backport follows [wasm-tools #2813](https://github.com/bytecodealliance/wasm-tools/commit/b38a9a674fb133984ce58e7ae853b07f3418e10e):
+The installed Renovate GitHub App uses the Monday update window in
+renovate.json (Europe/Amsterdam) to propose Cargo.toml and Cargo.lock updates.
+Cargo.lock resolves wasm-tools and its dependencies from crates.io. The host
+packager's build.rs compiles the locked CLI for wasm32-wasip1. For wit-parser
+0.263.0 only, it applies the [upstream parser-limit fix](https://github.com/bytecodealliance/wasm-tools/pull/2813)
+to a private copy of the published source; the Cargo registry is never edited.
+Beepboop publishes the release and opens and authors the downstream update PR
+using a repository-scoped installation token obtained through GitHub OIDC.
 
-- `src/decoding.rs` grows the section buffer with bytes actually read instead
-  of allocating the length claimed by the input.
-- `src/resolve.rs` checks named-type and alias depth in topological order,
-  without recursively walking the graph. Newly resolved types 100 levels deep
-  are rejected.
-- `src/ast.rs` also bounds inline parsing at 100 levels because 0.232.0 predates
-  the inline-depth check assumed by the upstream change.
+On a candidate PR, CI runs `make wasm-tools` (Cargo --locked, with the Rust
+toolchain and WASI target from rust-toolchain.toml), then runs the Go tests
+against the rebuilt guest. Keep the PR up to date and require the candidate
+job before merging: promotion checks for the successful artifact for the
+exact merged tree. Artifacts expire after 30 days; rerun before merging if
+necessary. The candidate has no release permissions.
 
-The vendored wasmparser 0.232.0 also uses subtraction in
-`BinaryReader::ensure_has_bytes`. On wasm32, adding a claimed section length to
-the cursor could wrap and turn truncated input into a slice panic before the
-WIT decoder could return its error. The malformed-section fixture covers that
-path as well as bounded buffering.
-
-The older parser preserves the generator's supported WIT syntax. An upgrade to
-the November 2026 wasm-tools source rejects existing empty-record, empty-tuple
-and resource-name fixtures. Moving to that syntax requires a separate migration.
-
-Rebuild from the repository root with Rust's `wasm32-wasip1` target installed:
-
-```sh
-make wasm-tools
-go test ./... ./cm/...
-```
-
-The Cargo lockfile fixes dependency versions. `gzip -n` omits timestamps and
-input filenames from the committed executable archive. `wit/parser_limits_test.go`
-exercises the embedded executable through the public loader.
+After merge, CI publishes those bytes and their SHA-256 to a GitHub Release
+tagged `wasm-tools/v<upstream>-kjanat.<digest-prefix>`. This is separate from
+Go module tags and never changes the repository's Latest release. CI opens
+a second PR that embeds the published asset and records its tag. That PR
+checks the binary against the release and runs the normal integration suite.

@@ -1,0 +1,107 @@
+diff --git a/src/ast.rs b/src/ast.rs
+index b88b673146..0450342197 100644
+--- a/src/ast.rs
++++ b/src/ast.rs
+@@ -1436,9 +1436,10 @@ fn parse_docs<'a>(tokens: &mut Tokenizer<'a>) -> Result<Docs<'a>, lex::Error> {
+     Ok(docs)
+ }
+
+-/// Maximum nesting depth of types parsed with `Type::parse`, e.g.
+-/// `list<list<list<...>>>`.
+-const MAX_TYPE_DEPTH: usize = 100;
++/// Maximum nesting depth of types, both within one type parsed with
++/// `Type::parse`, e.g. `list<list<list<...>>>`, and through named types and
++/// aliases once a package is resolved.
++pub(crate) const MAX_TYPE_DEPTH: usize = 100;
+
+ impl<'a> Type<'a> {
+     fn parse(tokens: &mut Tokenizer<'a>) -> ParseResult<Self> {
+diff --git a/src/decoding.rs b/src/decoding.rs
+index aeddc85eb9..f056c8d8f3 100644
+--- a/src/decoding.rs
++++ b/src/decoding.rs
+@@ -62,15 +62,10 @@ impl ComponentInfo {
+                 Chunk::NeedMoreData(hint) => {
+                     assert!(!eof); // otherwise an error would be returned
+
+-                    // Use the hint to preallocate more space, then read
+-                    // some more data into our buffer.
+-                    //
+-                    // Note that the buffer management here is not ideal,
+-                    // but it's compact enough to fit in an example!
+-                    let len = buffer.len();
+-                    buffer.extend((0..hint).map(|_| 0u8));
+-                    let n = reader.read(&mut buffer[len..])?;
+-                    buffer.truncate(len + n);
++                    // Read up to the hint into our buffer, which grows with
++                    // what is read: the hint comes from the input, so it may
++                    // be far more than there is.
++                    let n = (&mut reader).take(hint as u64).read_to_end(&mut buffer)?;
+                     eof = n == 0;
+                     continue;
+                 }
+diff --git a/src/resolve/mod.rs b/src/resolve/mod.rs
+index 2680c1a011..96f0e0de0e 100644
+--- a/src/resolve/mod.rs
++++ b/src/resolve/mod.rs
+@@ -3535,6 +3535,7 @@ impl Remap {
+         // order should be sufficient. Also note though that the interface
+         // owner of a type isn't updated here due to interfaces not being known
+         // yet.
++        let first_new_type = resolve.types.len();
+         for (id, mut ty) in unresolved.types.into_iter().skip(foreign_types) {
+             let span = ty.span;
+             if !resolve.include_stability(&ty.stability, &pkgid, span)? {
+@@ -3568,6 +3569,8 @@ impl Remap {
+             self.types.push(Some(new_id));
+         }
+
++        check_type_depth(resolve, first_new_type)?;
++
+         // Next transfer all interfaces into `Resolve`, updating type ids
+         // referenced along the way.
+         for (id, mut iface) in unresolved.interfaces.into_iter().skip(foreign_interfaces) {
+@@ -4495,6 +4498,43 @@ impl Remap {
+     }
+ }
+
++/// Errors if a type at index `first_new` or later in `resolve.types` is
++/// nested `MAX_TYPE_DEPTH` or more types deep, counting aliases.
++///
++/// Types are topologically sorted, so each type's depth follows from the
++/// depths of the earlier types it refers to in one pass, without recursion.
++fn check_type_depth(resolve: &Resolve, first_new: usize) -> ResolveResult<()> {
++    struct Deepest<'a> {
++        depths: &'a [usize],
++        deepest: usize,
++    }
++    impl TypeIdVisitor for Deepest<'_> {
++        fn before_visit_type_id(&mut self, id: TypeId) -> bool {
++            self.deepest = self.deepest.max(self.depths[id.index()]);
++            // Only look at the types referred to directly.
++            false
++        }
++    }
++    let mut depths = Vec::with_capacity(resolve.types.len());
++    for (id, ty) in resolve.types.iter() {
++        let mut deepest = Deepest {
++            depths: &depths,
++            deepest: 0,
++        };
++        deepest.visit_type_def(resolve, ty);
++        let depth = deepest.deepest + 1;
++        if id.index() >= first_new && depth >= crate::ast::MAX_TYPE_DEPTH {
++            let msg = match &ty.name {
++                Some(name) => format!("type `{name}` is nested too deep"),
++                None => "type nesting too deep".to_string(),
++            };
++            return Err(ResolveError::new_semantic(ty.span, msg));
++        }
++        depths.push(depth);
++    }
++    Ok(())
++}
++
+ struct MergeMap<'a> {
+     /// A map of package ids in `from` to those in `into` for those that are
+     /// found to be equivalent.

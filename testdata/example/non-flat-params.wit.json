@@ -23,11 +23,10 @@
     {
       "name": "corner-case",
       "types": {
-        "t0": 0,
-        "t4": 1,
-        "t16": 2,
-        "t32": 3,
-        "wind": 4
+        "t4": 0,
+        "t16": 1,
+        "t32": 2,
+        "wind": 3
       },
       "functions": {
         "f": {
@@ -38,34 +37,13 @@
         "f0-void": {
           "name": "f0-void",
           "kind": "freestanding",
-          "params": [
-            {
-              "name": "t",
-              "type": 5
-            }
-          ]
+          "params": []
         },
         "f0-u32": {
           "name": "f0-u32",
           "kind": "freestanding",
-          "params": [
-            {
-              "name": "t",
-              "type": 5
-            }
-          ],
+          "params": [],
           "result": "u32"
-        },
-        "f0-t0": {
-          "name": "f0-t0",
-          "kind": "freestanding",
-          "params": [
-            {
-              "name": "t",
-              "type": 5
-            }
-          ],
-          "result": 0
         },
         "f4-void": {
           "name": "f4-void",
@@ -73,7 +51,7 @@
           "params": [
             {
               "name": "t",
-              "type": 1
+              "type": 0
             }
           ]
         },
@@ -83,7 +61,7 @@
           "params": [
             {
               "name": "t",
-              "type": 1
+              "type": 0
             }
           ],
           "result": "u32"
@@ -94,10 +72,10 @@
           "params": [
             {
               "name": "t",
-              "type": 1
+              "type": 0
             }
           ],
-          "result": 1
+          "result": 0
         },
         "f16-void": {
           "name": "f16-void",
@@ -105,7 +83,7 @@
           "params": [
             {
               "name": "t",
-              "type": 2
+              "type": 1
             }
           ]
         },
@@ -115,7 +93,7 @@
           "params": [
             {
               "name": "t",
-              "type": 2
+              "type": 1
             }
           ],
           "result": "u32"
@@ -126,10 +104,10 @@
           "params": [
             {
               "name": "t",
-              "type": 2
+              "type": 1
             }
           ],
-          "result": 2
+          "result": 1
         },
         "f32-void": {
           "name": "f32-void",
@@ -137,7 +115,7 @@
           "params": [
             {
               "name": "t",
-              "type": 3
+              "type": 2
             }
           ]
         },
@@ -147,7 +125,7 @@
           "params": [
             {
               "name": "t",
-              "type": 3
+              "type": 2
             }
           ],
           "result": "u32"
@@ -158,10 +136,10 @@
           "params": [
             {
               "name": "t",
-              "type": 3
+              "type": 2
             }
           ],
-          "result": 3
+          "result": 2
         },
         "u16-void": {
           "name": "u16-void",
@@ -601,24 +579,74 @@
         "[method]wind.f": {
           "name": "[method]wind.f",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
             }
           ]
         },
         "[method]wind.f4-void": {
           "name": "[method]wind.f4-void",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
+            },
+            {
+              "name": "t",
+              "type": 0
+            }
+          ]
+        },
+        "[method]wind.f4-u32": {
+          "name": "[method]wind.f4-u32",
+          "kind": {
+            "method": 3
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 4
+            },
+            {
+              "name": "t",
+              "type": 0
+            }
+          ],
+          "result": "u32"
+        },
+        "[method]wind.f4-t4": {
+          "name": "[method]wind.f4-t4",
+          "kind": {
+            "method": 3
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 4
+            },
+            {
+              "name": "t",
+              "type": 0
+            }
+          ],
+          "result": 0
+        },
+        "[method]wind.f16-void": {
+          "name": "[method]wind.f16-void",
+          "kind": {
+            "method": 3
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 4
             },
             {
               "name": "t",
@@ -626,15 +654,15 @@
             }
           ]
         },
-        "[method]wind.f4-u32": {
-          "name": "[method]wind.f4-u32",
+        "[method]wind.f16-u32": {
+          "name": "[method]wind.f16-u32",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
             },
             {
               "name": "t",
@@ -643,15 +671,15 @@
           ],
           "result": "u32"
         },
-        "[method]wind.f4-t4": {
-          "name": "[method]wind.f4-t4",
+        "[method]wind.f16-t16": {
+          "name": "[method]wind.f16-t16",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
             },
             {
               "name": "t",
@@ -660,15 +688,15 @@
           ],
           "result": 1
         },
-        "[method]wind.f16-void": {
-          "name": "[method]wind.f16-void",
+        "[method]wind.f32-void": {
+          "name": "[method]wind.f32-void",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
             },
             {
               "name": "t",
@@ -676,15 +704,15 @@
             }
           ]
         },
-        "[method]wind.f16-u32": {
-          "name": "[method]wind.f16-u32",
+        "[method]wind.f32-u32": {
+          "name": "[method]wind.f32-u32",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
             },
             {
               "name": "t",
@@ -693,15 +721,15 @@
           ],
           "result": "u32"
         },
-        "[method]wind.f16-t16": {
-          "name": "[method]wind.f16-t16",
+        "[method]wind.f32-t32": {
+          "name": "[method]wind.f32-t32",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
             },
             {
               "name": "t",
@@ -710,65 +738,15 @@
           ],
           "result": 2
         },
-        "[method]wind.f32-void": {
-          "name": "[method]wind.f32-void",
-          "kind": {
-            "method": 4
-          },
-          "params": [
-            {
-              "name": "self",
-              "type": 6
-            },
-            {
-              "name": "t",
-              "type": 3
-            }
-          ]
-        },
-        "[method]wind.f32-u32": {
-          "name": "[method]wind.f32-u32",
-          "kind": {
-            "method": 4
-          },
-          "params": [
-            {
-              "name": "self",
-              "type": 6
-            },
-            {
-              "name": "t",
-              "type": 3
-            }
-          ],
-          "result": "u32"
-        },
-        "[method]wind.f32-t32": {
-          "name": "[method]wind.f32-t32",
-          "kind": {
-            "method": 4
-          },
-          "params": [
-            {
-              "name": "self",
-              "type": 6
-            },
-            {
-              "name": "t",
-              "type": 3
-            }
-          ],
-          "result": 3
-        },
         "[method]wind.u16-void": {
           "name": "[method]wind.u16-void",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
             },
             {
               "name": "a",
@@ -839,12 +817,12 @@
         "[method]wind.u16-u8": {
           "name": "[method]wind.u16-u8",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
             },
             {
               "name": "a",
@@ -916,12 +894,12 @@
         "[method]wind.u16-u8-u8": {
           "name": "[method]wind.u16-u8-u8",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
             },
             {
               "name": "a",
@@ -993,12 +971,12 @@
         "[method]wind.u16-u32-u64": {
           "name": "[method]wind.u16-u32-u64",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
             },
             {
               "name": "a",
@@ -1070,12 +1048,12 @@
         "[method]wind.u17-void": {
           "name": "[method]wind.u17-void",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
             },
             {
               "name": "a",
@@ -1153,12 +1131,12 @@
         "[method]wind.u17-u8-u8": {
           "name": "[method]wind.u17-u8-u8",
           "kind": {
-            "method": 4
+            "method": 3
           },
           "params": [
             {
               "name": "self",
-              "type": 6
+              "type": 4
             },
             {
               "name": "a",
@@ -1312,17 +1290,6 @@
   ],
   "types": [
     {
-      "name": "t0",
-      "kind": {
-        "tuple": {
-          "types": []
-        }
-      },
-      "owner": {
-        "interface": 0
-      }
-    },
-    {
       "name": "t4",
       "kind": {
         "tuple": {
@@ -1343,10 +1310,10 @@
       "kind": {
         "tuple": {
           "types": [
-            1,
-            1,
-            1,
-            1
+            0,
+            0,
+            0,
+            0
           ]
         }
       },
@@ -1359,8 +1326,8 @@
       "kind": {
         "tuple": {
           "types": [
-            2,
-            2
+            1,
+            1
           ]
         }
       },
@@ -1378,17 +1345,8 @@
     {
       "name": null,
       "kind": {
-        "tuple": {
-          "types": []
-        }
-      },
-      "owner": null
-    },
-    {
-      "name": null,
-      "kind": {
         "handle": {
-          "borrow": 4
+          "borrow": 3
         }
       },
       "owner": null
