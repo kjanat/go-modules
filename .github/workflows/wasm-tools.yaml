@@ -30,7 +30,7 @@ jobs:
           go generate ./tests
           git diff --exit-code -- tests/generated
           test -z "$(git ls-files --others --exclude-standard tests/generated)"
-      - name: Package tested guest
+      - name: Package wasm-tools guest
         id: package
         run: |
           mkdir candidate
@@ -85,15 +85,6 @@ jobs:
         uses: kjanat/beepboop/actions/token@3a861875a1dd51f12d1e4f47d8c1bcbd68a7c665 # v1.10.7
         with:
           permission-contents: write
-          permission-pull-requests: write
-      - name: Release the tested bytes
+      - name: Publish wasm-tools release
         env: { GH_TOKEN: "${{ steps.beepboop.outputs.token }}" }
         run: bash scripts/wasm-tools/release.sh
-      - name: Propose the embedded guest update
-        env:
-          GH_TOKEN: ${{ steps.beepboop.outputs.token }}
-          GIT_AUTHOR_NAME: ${{ steps.beepboop.outputs.bot-login }}
-          GIT_AUTHOR_EMAIL: ${{ steps.beepboop.outputs.bot-email }}
-          GIT_COMMITTER_NAME: ${{ steps.beepboop.outputs.bot-login }}
-          GIT_COMMITTER_EMAIL: ${{ steps.beepboop.outputs.bot-email }}
-        run: bash scripts/wasm-tools/consume.sh
