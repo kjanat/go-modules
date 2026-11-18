@@ -1,0 +1,20 @@
+[package]
+name = "embedded-wasm-tools"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+wasm-tools = { version = "=1.263.0", default-features = false, features = ["component"] }
+
+# 1.263.0 predates the upstream parser limits. Cargo.lock selects the fixed
+# commit. Remove this override when upgrading to a release containing #2813.
+[patch.crates-io]
+wasm-tools = { git = "https://github.com/bytecodealliance/wasm-tools", rev = "b38a9a674fb133984ce58e7ae853b07f3418e10e" }
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = "z"
+panic = "abort"
+strip = true

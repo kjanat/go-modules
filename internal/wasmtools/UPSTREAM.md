@@ -1,21 +1,24 @@
-# Embedded WIT parser
+# Embedded wasm-tools
 
-The committed wasm32-wasip1 executable is built from wasm-tools 1.263.0 at
-[upstream revision b38a9a6](https://github.com/bytecodealliance/wasm-tools/commit/b38a9a674fb133984ce58e7ae853b07f3418e10e).
-This revision includes the post-release parser depth and bounded-read fixes,
-and checks section sizes against the remaining input before adding offsets.
-The build uses the upstream Cargo.lock and only the component feature.
+Go builds embed the checked-in WASI Preview 1 guest. Installing the Go module
+does not download wasm-tools, compile Rust, or access GitHub Releases.
 
-To rebuild on Linux, install Rust 1.100.0 with the wasm32-wasip1 target
-(`rustup toolchain install 1.100.0 --profile minimal --target wasm32-wasip1`),
-then run `make wasm-tools`. The build verifies the source archive before
-compiling and replaces the gzip archive only on success.
+The Monday Renovate workflow (also manually dispatchable) updates the exact
+wasm-tools dependency in Cargo.toml and Cargo.lock. The temporary Cargo patch
+for 1.263.0 supplies upstream's post-release parser-limit fixes. A newer exact
+version can resolve from crates.io without that patch. Set the repository or
+organization Actions secret `RENOVATE_TOKEN` to a bot token with contents and
+pull-request write access; workflow write access is needed for action updates.
 
-To upgrade, update the revision and archive SHA-256 in build.sh, rebuild,
-align the native wasm-tools version in CI, and run `make tests/generated`
-with that native CLI on PATH. Run `go test ./... ./cm/...` against the
-checked-in guest. The WIT suite covers parser limits, malformed sections,
-and round trips from the fixture corpus.
+On a candidate PR, CI runs `make wasm-tools` (Cargo --locked, with the Rust
+toolchain and WASI target from rust-toolchain.toml), then runs the Go tests
+against the rebuilt guest. Keep the PR up to date and require the candidate
+job before merging: promotion checks for the successful artifact for the
+exact merged tree. Artifacts expire after 30 days; rerun before merging if
+necessary. The candidate has no release permissions.
 
-The Go bindings implement a subset of the parser grammar. Unsupported function
-and type kinds (for example async functions and maps) produce a decoder error.
+After merge, CI publishes those bytes and their SHA-256 to a GitHub Release
+tagged `wasm-tools/v<upstream>-kjanat.<digest-prefix>`. This is separate from
+Go module tags and never changes the repository's Latest release. CI opens
+a second PR that embeds the published asset and records its tag. That PR
+checks the binary against the release and runs the normal integration suite.

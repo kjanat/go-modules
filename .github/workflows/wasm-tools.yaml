@@ -1,0 +1,89 @@
+name: wasm-tools candidate
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, reopened, closed]
+    paths:
+      - internal/wasmtools/Cargo.toml
+      - internal/wasmtools/Cargo.lock
+      - internal/wasmtools/src/**
+      - internal/wasmtools/rust-toolchain.toml
+      - internal/wasmtools/build.sh
+      - scripts/wasm-tools/**
+      - .github/workflows/wasm-tools.yaml
+permissions:
+  contents: read
+jobs:
+  candidate:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Build guest from locked sources
+        run: make wasm-tools
+      - name: Exercise candidate through the Go host and generator
+        run: |
+          go test -count=1 ./... ./cm/...
+          go generate ./tests
+          git diff --exit-code -- tests/generated
+          test -z "$(git ls-files --others --exclude-standard tests/generated)"
+      - name: Package tested guest
+        id: package
+        run: |
+          mkdir candidate
+          cp internal/wasmtools/wasm-tools.wasm.gz candidate/
+          python3 scripts/wasm-tools/identity.py > candidate/tag
+          (cd candidate && sha256sum wasm-tools.wasm.gz > SHA256SUMS)
+          echo "tree=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wasm-tools-pr-${{ github.event.number }}-${{ steps.package.outputs.tree }}
+          path: candidate/
+          retention-days: 30
+  promote:
+    if: github.event.action == 'closed' && github.event.pull_request.merged && github.repository == 'kjanat/go-modules' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
+      - name: Locate the successful run for this exact merged tree
+        id: tested
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+          name="wasm-tools-pr-$PR-$(git rev-parse 'HEAD^{tree}')"
+          runs=$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/workflows/wasm-tools.yaml/runs" -f event=pull_request -f head_sha="$HEAD_SHA" -f status=success --jq '.workflow_runs[].id')
+          for run in $runs; do
+            if gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/artifacts" --jq '.artifacts[] | select(.expired == false) | .name' | grep -Fxq "$name"; then
+              echo "run=$run" >> "$GITHUB_OUTPUT"
+              echo "name=$name" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          done
+          echo "::error::No successful candidate for the merged tree. Update the PR branch and pass candidate CI before merging."
+          exit 1
+      - uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.tested.outputs.run }}
+          name: ${{ steps.tested.outputs.name }}
+          path: candidate
+      - name: Release the tested bytes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/wasm-tools/release.sh
+      - name: Propose the embedded guest update
+        env:
+          GH_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+        run: bash scripts/wasm-tools/consume.sh
