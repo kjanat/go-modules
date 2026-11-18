@@ -4,6 +4,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## Unreleased
 
+## [v0.10.0] — 2026-11-18
+
 ### Changed
 
 - Require Go 1.27.0 throughout the repository, including the standalone `cm` module, and use Go 1.27.4 for development and CI.
@@ -314,6 +316,7 @@ Initial version, supporting [TinyGo](https://tinygo.org/) + [WASI](https://wasi.
 - Because Go does not have a native tagged union type, pointers represented in `variant` and `result` types may not be visible to the garbage collector and may be freed while still in use.
 - Support for mainline [Go](https://go.dev/).
 
+[v0.10.0]: <https://github.com/kjanat/go-modules/compare/v0.9.3...v0.10.0>
 [v0.9.3]: <https://github.com/kjanat/go-modules/compare/v0.9.2...v0.9.3>
 [v0.9.2]: <https://github.com/kjanat/go-modules/compare/v0.9.1...v0.9.2>
 [v0.9.1]: <https://github.com/kjanat/go-modules/compare/v0.9.0...v0.9.1>
