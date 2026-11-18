@@ -9,9 +9,8 @@ Cargo.lock resolves wasm-tools and its dependencies from crates.io. The host
 packager's build.rs compiles the locked CLI for wasm32-wasip1. For wit-parser
 0.263.0 only, it applies the [upstream parser-limit fix](https://github.com/bytecodealliance/wasm-tools/pull/2813)
 to a private copy of the published source; the Cargo registry is never edited.
-The downstream release workflow uses its GitHub Actions job token. Repository
-settings must allow Actions to create pull requests. GitHub may require approval
-to start checks on that Actions-created consumption PR.
+Beepboop publishes the release and opens and authors the downstream update PR
+using a repository-scoped installation token obtained through GitHub OIDC.
 
 On a candidate PR, CI runs `make wasm-tools` (Cargo --locked, with the Rust
 toolchain and WASI target from rust-toolchain.toml), then runs the Go tests

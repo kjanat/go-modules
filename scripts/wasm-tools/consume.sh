@@ -1,5 +1,5 @@
 set -euo pipefail
-: "${GH_TOKEN:?Missing GitHub Actions job token}"
+: "${GH_TOKEN:?Missing Beepboop installation token}"
 tag=$(cat candidate/tag)
 branch="update/${tag}"
 gh auth setup-git
@@ -13,8 +13,6 @@ cp candidate/published/wasm-tools.wasm.gz internal/wasmtools/
 echo "$tag" > internal/wasmtools/embedded-release
 git add internal/wasmtools/{embedded-release,wasm-tools.wasm.gz}
 git diff --cached --quiet && exit 0
-git config user.name 'github-actions[bot]'
-git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
 if ! git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null; then
   git commit -m "Update embedded guest to $tag"
   git push origin "HEAD:refs/heads/$branch"
