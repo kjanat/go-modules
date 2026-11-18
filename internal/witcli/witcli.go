@@ -20,9 +20,13 @@ import (
 // WIT indirectly by processing the input through wasm-tools.
 // If forceWIT is true, it will always process input through wasm-tools.
 func LoadWIT(ctx context.Context, path string, r io.Reader, forceWIT bool) (*wit.Resolve, error) {
+	return loadWIT(ctx, path, r, forceWIT, oci.PullWIT)
+}
+
+func loadWIT(ctx context.Context, path string, r io.Reader, forceWIT bool, pull func(context.Context, string) ([]byte, error)) (*wit.Resolve, error) {
 	if oci.IsOCIPath(path) {
 		fmt.Fprintf(os.Stderr, "Fetching OCI artifact %s\n", path)
-		if b, err := oci.PullWIT(ctx, path); err != nil {
+		if b, err := pull(ctx, path); err != nil {
 			return nil, err
 		} else {
 			return wit.DecodeWITContext(ctx, bytes.NewReader(b))

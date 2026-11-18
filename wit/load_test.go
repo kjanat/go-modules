@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/kjanat/wazero/experimental"
 )
 
 func TestLoadWITPaths(t *testing.T) {
@@ -88,13 +90,28 @@ func TestLoadWITContextCancelled(t *testing.T) {
 	}
 }
 
-func TestDecodeWITContextCancelledDuringExecution(t *testing.T) {
+func TestDecodeWITClosesRuntimeAfterCancelledInput(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
+	// The guest can close itself during Run. Its WASI provider stays alive
+	// until the loader closes the runtime with the detached request context.
+	type key struct{}
+	ctx = context.WithValue(ctx, key{}, "request")
+	var detachedCloses int
+	ctx = experimental.WithCloseNotifier(ctx, experimental.CloseNotifyFunc(func(closeCtx context.Context, code uint32) {
+		if code == 0 && closeCtx.Done() == nil && closeCtx.Value(key{}) == "request" {
+			detachedCloses++
+		}
+	}))
 	reader := &cancellingWITReader{Reader: strings.NewReader("package example:cancel; world example {}"), cancel: cancel}
 	resolved, err := DecodeWITContext(ctx, reader)
 	if resolved != nil || !errors.Is(err, context.Canceled) {
 		t.Fatalf("got (%v, %v), want cancellation after the guest reads stdin", resolved, err)
+	}
+	// If the small guest finishes before wazero observes cancellation, both
+	// it and the provider can still be open at runtime teardown.
+	if detachedCloses == 0 {
+		t.Fatal("runtime teardown did not close any module with the detached request context")
 	}
 	// Cancellation must leave subsequent, independent loads usable.
 	resolved, err = DecodeWITContext(t.Context(), strings.NewReader("package example:cancel; world example {}"))
@@ -134,5 +151,24 @@ func TestLoadWITDirectoryDependencies(t *testing.T) {
 	}
 	if len(resolved.Packages) != 2 || len(resolved.Worlds) != 1 || resolved.Worlds[0].Name != "example" {
 		t.Fatalf("resolved packages/worlds: %v / %v", resolved.Packages, resolved.Worlds)
+	}
+}
+
+func TestDecodeWITOutputCancellation(t *testing.T) {
+	for _, tc := range []struct{ name, input string }{
+		{"last buffered read", "{}"}, {"before refill", strings.Repeat(" ", 8192) + "{}"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(t.Context())
+			defer cancel()
+			source := strings.NewReader(tc.input)
+			res, err := decodeWITOutput(ctx, &cancellingWITReader{Reader: source, cancel: cancel})
+			if res != nil || !errors.Is(err, context.Canceled) {
+				t.Fatalf("got (%v, %v), want cancellation", res, err)
+			}
+			if tc.name == "before refill" && source.Len() == 0 {
+				t.Fatal("decoder consumed the remaining input after cancellation")
+			}
+		})
 	}
 }

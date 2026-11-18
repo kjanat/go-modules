@@ -39,7 +39,7 @@ func PullWIT(ctx context.Context, path string) ([]byte, error) {
 
 	m, err := rc.ManifestGet(ctx, r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get manifest: %v", err)
+		return nil, fmt.Errorf("failed to get manifest: %w", err)
 	}
 
 	mi, ok := m.(manifest.Imager)
@@ -63,7 +63,7 @@ func PullWIT(ctx context.Context, path string) ([]byte, error) {
 
 	rdr, err := rc.BlobGet(ctx, r, layer)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch blob: %v", err)
+		return nil, fmt.Errorf("failed to fetch blob: %w", err)
 	}
 	defer rdr.Close()
 
@@ -71,7 +71,7 @@ func PullWIT(ctx context.Context, path string) ([]byte, error) {
 	var buf bytes.Buffer
 	_, err = io.Copy(&buf, rdr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read blob content: %v", err)
+		return nil, fmt.Errorf("failed to read blob content: %w", err)
 	}
 	return buf.Bytes(), nil
 }

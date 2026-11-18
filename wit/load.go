@@ -39,6 +39,8 @@ func LoadWIT(path string) (*Resolve, error) {
 // LoadWITContext loads WIT data from path using the embedded wasm-tools.
 // Cancelling ctx interrupts guest execution. Compilation of the embedded
 // wasm-tools module does not observe ctx, so a cold compile completes first.
+// The runtime is closed before decoding its JSON output. The decoder checks
+// cancellation between input reads and before returning.
 func LoadWITContext(ctx context.Context, path string) (*Resolve, error) {
 	return loadWIT(ctx, path, nil)
 }
@@ -56,7 +58,8 @@ func DecodeWIT(r io.Reader) (*Resolve, error) {
 // Cancelling ctx interrupts guest execution. A blocking Read
 // must be interrupted separately, for example by closing a caller-owned reader.
 // Compilation of the embedded wasm-tools module does not observe ctx, so a
-// cold compile completes first.
+// cold compile completes first. JSON output has the same cancellation
+// boundaries as [LoadWITContext].
 func DecodeWITContext(ctx context.Context, r io.Reader) (*Resolve, error) {
 	return loadWIT(ctx, "", r)
 }
@@ -85,22 +88,55 @@ func loadWIT(ctx context.Context, path string, reader io.Reader) (*Resolve, erro
 	} else {
 		stdin = reader
 	}
-	wasmTools, err := wasmtools.New(ctx)
-	if err != nil {
-		return nil, errors.Join(err, ctx.Err())
+	var stdout bytes.Buffer
+	if err := runWIT(ctx, stdin, &stdout, fsMap, args); err != nil {
+		return nil, err
 	}
-	defer wasmTools.Close(context.WithoutCancel(ctx))
-	stdout := &bytes.Buffer{}
-	stderr := &bytes.Buffer{}
-	err = wasmTools.Run(ctx, stdin, stdout, stderr, fsMap, args...)
-	if ctx.Err() != nil {
-		return nil, errors.Join(err, ctx.Err())
+	return decodeWITOutput(ctx, &stdout)
+}
+
+// runWIT owns the runtime only while producing JSON, including on panic.
+func runWIT(ctx context.Context, stdin io.Reader, stdout io.Writer, fsMap map[string]fs.FS, args []string) (err error) {
+	tool, err := wasmtools.New(ctx)
+	if err != nil {
+		return errors.Join(err, ctx.Err())
+	}
+	defer func() {
+		if closeErr := tool.Close(context.WithoutCancel(ctx)); closeErr != nil {
+			err = errors.Join(err, fmt.Errorf("closing wasm-tools runtime: %w", closeErr))
+		}
+	}()
+	var stderr bytes.Buffer
+	err = tool.Run(ctx, stdin, stdout, &stderr, fsMap, args...)
+	if cause := ctx.Err(); cause != nil {
+		return errors.Join(err, cause)
 	}
 	if err != nil {
 		if _, ok := err.(*sys.ExitError); ok {
-			return nil, fmt.Errorf("wasm-tools: %s", stderr.String())
+			return fmt.Errorf("wasm-tools: %s", stderr.String())
 		}
-		return nil, fmt.Errorf("wasm-tools: %w", err)
+		return fmt.Errorf("wasm-tools: %w", err)
 	}
-	return DecodeJSON(stdout)
+	return nil
+}
+
+func decodeWITOutput(ctx context.Context, r io.Reader) (*Resolve, error) {
+	res, err := DecodeJSON(contextReader{ctx, r})
+	// The decoder may finish entirely from its last buffered read.
+	if cause := ctx.Err(); cause != nil {
+		return nil, errors.Join(err, cause)
+	}
+	return res, err
+}
+
+type contextReader struct {
+	ctx context.Context
+	r   io.Reader
+}
+
+func (r contextReader) Read(p []byte) (int, error) {
+	if err := r.ctx.Err(); err != nil {
+		return 0, err
+	}
+	return r.r.Read(p)
 }
