@@ -7,14 +7,13 @@ version=${version%-kjanat.*}
 title="wasm-tools $version"
 sum=$(sha256sum wasm-tools.wasm.gz)
 [[ $sum == "$(cat SHA256SUMS)" && ${sum:0:12} == "${tag##*.}" ]]
-commit=$(git rev-parse HEAD)
-python3 - "$version" "$commit" > release-notes.md <<'PY'
+python3 - "$version" "$tag" > release-notes.md <<'PY'
 import os
 import sys
 import tomllib
 from pathlib import Path
 
-version, commit = sys.argv[1:]
+version, tag = sys.argv[1:]
 print(f"[Upstream release notes for wasm-tools {version}]"
       f"(https://github.com/bytecodealliance/wasm-tools/releases/tag/v{version})")
 root = Path("../internal/wasmtools")
@@ -24,7 +23,7 @@ for pkg in packages:
         patch = Path(f"internal/wasmtools/patches/wit-parser-{pkg['version']}.patch")
         if (Path("..") / patch).is_file():
             print(f"\nLocal patch: [{patch.name}]"
-                  f"(https://github.com/{os.environ['GITHUB_REPOSITORY']}/blob/{commit}/{patch})")
+                  f"(https://github.com/{os.environ['GITHUB_REPOSITORY']}/blob/{tag}/{patch})")
 PY
 if gh release view "$tag" >/dev/null 2>&1; then
   mkdir -p published
