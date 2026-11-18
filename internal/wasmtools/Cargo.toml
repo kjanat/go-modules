@@ -3,7 +3,8 @@ name = 'wasm-tools-go'
 edition = '2021'
 
 [dependencies]
-wasm-tools = { version = '1.232.0', default-features = false, features = [
+# Keep the embedded binary and vendored parser patches in sync; see UPSTREAM.md.
+wasm-tools = { version = '=1.232.0', default-features = false, features = [
 	'component',
 ] }
 
