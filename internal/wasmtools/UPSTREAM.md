@@ -5,8 +5,10 @@ does not download wasm-tools, compile Rust, or access GitHub Releases.
 
 The installed Renovate GitHub App uses the Monday update window in
 renovate.json (Europe/Amsterdam) to propose Cargo.toml and Cargo.lock updates.
-The temporary 1.263.0 Cargo patch supplies upstream's post-release parser
-fixes; a newer exact version can resolve from crates.io without that patch.
+Cargo.lock resolves wasm-tools and its dependencies from crates.io. The host
+packager's build.rs compiles the locked CLI for wasm32-wasip1. For wit-parser
+0.263.0 only, it applies the [upstream parser-limit fix](https://github.com/bytecodealliance/wasm-tools/pull/2813)
+to a private copy of the published source; the Cargo registry is never edited.
 The downstream release workflow uses its GitHub Actions job token. Repository
 settings must allow Actions to create pull requests. GitHub may require approval
 to start checks on that Actions-created consumption PR.

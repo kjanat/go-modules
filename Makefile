@@ -31,7 +31,7 @@ tests/generated: json
 # wasm-tools builds the internal/wasmtools/wasm-tools.wasm.gz artifact
 .PHONY: wasm-tools
 wasm-tools:
-	sh internal/wasmtools/build.sh
+	cd internal/wasmtools && cargo run --locked
 
 # internal/wasmtools/wasm-tools.wasm decompresses wasm-tools.wasm.gz for other make targets
 internal/wasmtools/wasm-tools.wasm: internal/wasmtools/wasm-tools.wasm.gz
