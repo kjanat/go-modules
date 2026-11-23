@@ -4,7 +4,7 @@
 	"forkProcessing": "enabled",
 	"timezone": "Europe/Amsterdam",
 	"schedule": ["* * * * 1"],
-	"enabledManagers": ["cargo", "gomod", "github-actions"],
+	"enabledManagers": ["cargo", "gomod", "github-actions", "mise"],
 	"packageRules": [
 		{
 			"description": "Follow Beepboop v1 without replacing the major tag with a digest",
