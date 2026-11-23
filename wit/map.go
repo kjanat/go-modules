@@ -1,8 +1,8 @@
 package wit
 
-// Map represents a WIT map with distinct key and value types.
+// Map represents the WIT type map<K, V>, with key type K and value type V.
 // Its memory layout is a pointer and length for a sequence of key/value pairs.
-// The layout does not capture map-specific rules such as distinct keys;
+// The layout does not capture map semantics such as last value wins for duplicate keys;
 // support for reading WIT maps does not imply support for generating bindings.
 type Map struct {
 	_typeDefKind

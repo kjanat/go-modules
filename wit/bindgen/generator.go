@@ -195,6 +195,23 @@ func newGenerator(res *wit.Resolve, opts ...Option) (*generator, error) {
 		g.world = first
 	}
 
+	// Only types reachable from the selected world need Go bindings.
+	for _, w := range res.Worlds {
+		if g.world != nil && w != g.world {
+			continue
+		}
+		for _, td := range res.TypeDefs {
+			if _, ok := td.Kind.(*wit.Map); !ok || !wit.DependsOn(w, td) {
+				continue
+			}
+			name := td.TypeName()
+			if name == "" {
+				name = "(anonymous)"
+			}
+			return nil, fmt.Errorf("Go binding generation does not support WIT map types: %q in world %q", name, w.Name)
+		}
+	}
+
 	// Instantiate a wasm-tools instance.
 	g.wasmTools, err = wasmtools.New(context.Background())
 	if err != nil {

@@ -9,19 +9,24 @@ import (
 	"github.com/kjanat/go-modules/wit"
 )
 
-func TestGoRejectsNestedAnonymousMap(t *testing.T) {
+func TestGoChecksMapsInSelectedWorld(t *testing.T) {
 	const src = `package test:features;
 interface api {
 	echo: func(input: option<map<string, u32>>);
 }
 world example { export api; }
+world simple { export echo: func(input: string) -> string; }
 `
 	res, err := wit.DecodeWIT(strings.NewReader(src))
 	if err != nil {
 		t.Fatal(err)
 	}
-	pkgs, err := Go(res)
+	pkgs, err := Go(res, World("example"))
 	if pkgs != nil || err == nil || !strings.Contains(err.Error(), "does not support WIT map types") {
 		t.Fatalf("Go returned %v, %v; want no packages and a WIT map error", pkgs, err)
+	}
+	pkgs, err = Go(res, World("simple"))
+	if len(pkgs) == 0 || err != nil {
+		t.Fatalf("Go returned %v, %v; want bindings for the map-free world", pkgs, err)
 	}
 }
