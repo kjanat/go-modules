@@ -7,6 +7,12 @@
   "enabledManagers": ["cargo", "gomod", "github-actions"],
   "packageRules": [
     {
+      "description": "Follow Beepboop v1 without replacing the major tag with a digest",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["kjanat/beepboop", "kjanat/beepboop/**"],
+      "pinDigests": false
+    },
+    {
       "description": "Test upstream wasm-tools releases individually",
       "matchManagers": ["cargo"],
       "matchPackageNames": ["wasm-tools"],

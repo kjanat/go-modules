@@ -5,23 +5,22 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.*'
 
+permissions:
+  contents: read
+
 env:
-  go-modules: ./... ./cm/...
+  CGO_ENABLED: "0"
 
 jobs:
   build:
     name: Build binaries
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        goos: [linux, windows, darwin]
-        goarch: [amd64, arm64]
-        exclude:
-          - goos: windows
-            goarch: arm64
+        GOOS: [linux, windows, darwin]
+        GOARCH: [amd64, arm64]
+        exclude: [{ GOOS: windows, GOARCH: arm64 }]
 
     steps:
       - name: Checkout repo
@@ -29,30 +28,23 @@ jobs:
 
       - name: Set up Go
         uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
+        with: { go-version-file: go.mod }
 
       - name: Run Go tests
-        env:
-          # Test with the same environment as the build.
-          CGO_ENABLED: 0
-        run: go test ${{ env.go-modules }}
+        run: go test ./... ./cm/...
 
       - name: Build binary
-        env:
-          # Disable cgo so the pre-built binary is statically linked for maximum compatibility.
-          CGO_ENABLED: 0
+        env: { "${{ insert }}": "${{ fromjson(matrix) }}" }
         run: |
           mkdir -p build
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o wit-bindgen-go ./cmd/wit-bindgen-go
-          tar -czvf build/wit-bindgen-go-${{ matrix.goos }}-${{ matrix.goarch }}.tgz wit-bindgen-go
-          rm wit-bindgen-go
+          go build -o wit-bindgen-go ./cmd/wit-bindgen-go
+          tar -czf "build/wit-bindgen-go-${GOOS}-${GOARCH}.tgz" wit-bindgen-go
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: wit-bindgen-go_${{ matrix.goos }}_${{ matrix.goarch }}
-          path: build/wit-bindgen-go-${{ matrix.goos }}-${{ matrix.goarch }}.tgz
+          name: wit-bindgen-go_${{ matrix.GOOS }}_${{ matrix.GOARCH }}
+          path: build/wit-bindgen-go-${{ matrix.GOOS }}-${{ matrix.GOARCH }}.tgz
           retention-days: 1
 
   release:
@@ -74,30 +66,16 @@ jobs:
           merge-multiple: true # all artifacts are downloaded to this directory
 
       - name: Extract release notes
-        run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          cd "$GITHUB_WORKSPACE"
-          ./scripts/extract-changelog.sh "$TAG_NAME" > RELEASE_NOTES.md
-          cat RELEASE_NOTES.md
+        run: ./scripts/extract-changelog.sh "${GITHUB_REF_NAME}" > RELEASE_NOTES.md
 
       - name: Get Beepboop publication token
         id: beepboop
-        uses: kjanat/beepboop/actions/token@3a861875a1dd51f12d1e4f47d8c1bcbd68a7c665 # v1.10.7
-        with:
-          permission-contents: write
+        uses: kjanat/beepboop/actions/token@v1
+        with: { permission-contents: write }
       - name: Create release
-        env:
-          GH_TOKEN: ${{ steps.beepboop.outputs.token }}
+        env: { GH_TOKEN: "${{ steps.beepboop.outputs.token }}" }
         run: |
-          ls -R build/
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          if [[ "$TAG_NAME" =~ .+-pre.* ]]; then
-            PRERELEASE_ARGS=(--prerelease --latest=false)
-          else
-            PRERELEASE_ARGS=()
-          fi
-          gh release create "${{ github.ref_name }}" \
-            --notes-file RELEASE_NOTES.md \
-            --title "${{ github.ref_name }}" \
-            "${PRERELEASE_ARGS[@]}" \
-            build/*
+          flags=()
+          if [[ "${GITHUB_REF_NAME%%+*}" == *-* ]]; then flags+=(--prerelease --latest=false); fi
+          gh release create "${GITHUB_REF_NAME}" --verify-tag --title "${GITHUB_REF_NAME}" \
+            --notes-file RELEASE_NOTES.md "${flags[@]}" ./build/*.tgz
