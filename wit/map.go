@@ -1,30 +1,46 @@
 package wit
 
-// Map represents the WIT type map<K, V>, with key type K and value type V.
-// Its memory layout is a pointer and length for a sequence of key/value pairs.
-// The layout does not capture map semantics such as last value wins for duplicate keys;
-// support for reading WIT maps does not imply support for generating bindings.
+// Map represents a WIT [map type] with key type K and value type V.
+// It implements the [Node], [ABI], and [TypeDefKind] interfaces.
+//
+// [map type]: https://github.com/WebAssembly/component-model/blob/main/design/mvp/WIT.md#types
 type Map struct {
 	_typeDefKind
 	Key   Type
 	Value Type
 }
 
-// Size returns the Canonical ABI byte size of the pointer and length on wasm32.
-func (*Map) Size() uintptr { return 8 }
-
-// Align returns the Canonical ABI byte alignment of a map on wasm32.
-func (*Map) Align() uintptr { return 4 }
-
-// Flat returns the Canonical ABI pointer to the entries and the entry count.
-func (m *Map) Flat() []Type {
-	entry := &TypeDef{Kind: &Tuple{Types: []Type{m.Key, m.Value}}}
-	return []Type{PointerTo(entry), U32{}}
+// Despecialize despecializes [Map] m into a [List] of [Tuple] with key and value types.
+// See the [canonical ABI documentation] for more information.
+//
+// [canonical ABI documentation]: https://github.com/WebAssembly/component-model/blob/main/design/mvp/CanonicalABI.md#despecialization
+func (m *Map) Despecialize() TypeDefKind {
+	return &List{
+		Type: &TypeDef{Kind: &Tuple{Types: []Type{m.Key, m.Value}}},
+	}
 }
 
-func (*Map) hasPointer() bool    { return true }
-func (m *Map) hasBorrow() bool   { return HasBorrow(m.Key) || HasBorrow(m.Value) }
-func (m *Map) hasResource() bool { return HasResource(m.Key) || HasResource(m.Value) }
-func (m *Map) dependsOn(dep Node) bool {
-	return dep == m || DependsOn(m.Key, dep) || DependsOn(m.Value, dep)
+// Size returns the [ABI byte size] for [Map] m.
+// It is first [despecialized] into a [List] of [Tuple], then sized.
+//
+// [ABI byte size]: https://github.com/WebAssembly/component-model/blob/main/design/mvp/CanonicalABI.md#element-size
+// [despecialized]: https://github.com/WebAssembly/component-model/blob/main/design/mvp/CanonicalABI.md#despecialization
+func (m *Map) Size() uintptr {
+	return m.Despecialize().Size()
+}
+
+// Align returns the [ABI byte alignment] for [Map] m.
+// It is first [despecialized] into a [List] of [Tuple], then aligned.
+//
+// [ABI byte alignment]: https://github.com/WebAssembly/component-model/blob/main/design/mvp/CanonicalABI.md#alignment
+// [despecialized]: https://github.com/WebAssembly/component-model/blob/main/design/mvp/CanonicalABI.md#despecialization
+func (m *Map) Align() uintptr {
+	return m.Despecialize().Align()
+}
+
+// Flat returns the [flattened] ABI representation of [Map] m.
+//
+// [flattened]: https://github.com/WebAssembly/component-model/blob/main/design/mvp/CanonicalABI.md#flattening
+func (m *Map) Flat() []Type {
+	return m.Despecialize().Flat()
 }
