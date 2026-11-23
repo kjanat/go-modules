@@ -1,0 +1,28 @@
+package foo:foo;
+
+interface maps {
+	type names = map<string, u32>;
+	type same = map<string, string>;
+	record config {
+		labels: map<string, string>,
+		counts: names,
+	}
+	variant entry {
+		empty,
+		tags(map<u32, list<string>>),
+	}
+	named-roundtrip: func(x: names) -> names;
+	same-roundtrip: func(x: same) -> same;
+	anonymous-param: func(x: map<string, u64>);
+	anonymous-ret: func() -> map<char, bool>;
+	nested: func(x: map<string, map<u8, f64>>) -> map<s64, names>;
+	option-map: func(x: option<map<bool, string>>) -> option<map<u16, s8>>;
+	result-map: func() -> result<map<s16, u8>, map<s32, string>>;
+	record-map: func(x: config) -> config;
+	variant-map: func(x: entry) -> entry;
+}
+
+world the-maps {
+	import maps;
+	export maps;
+}

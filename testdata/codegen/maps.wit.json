@@ -1,0 +1,342 @@
+{
+  "worlds": [
+    {
+      "name": "the-maps",
+      "imports": {
+        "interface-0": {
+          "interface": {
+            "id": 0
+          }
+        }
+      },
+      "exports": {
+        "interface-0": {
+          "interface": {
+            "id": 0
+          }
+        }
+      },
+      "package": 0
+    }
+  ],
+  "interfaces": [
+    {
+      "name": "maps",
+      "types": {
+        "names": 0,
+        "same": 1,
+        "config": 3,
+        "entry": 6
+      },
+      "functions": {
+        "named-roundtrip": {
+          "name": "named-roundtrip",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "x",
+              "type": 0
+            }
+          ],
+          "result": 0
+        },
+        "same-roundtrip": {
+          "name": "same-roundtrip",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "x",
+              "type": 1
+            }
+          ],
+          "result": 1
+        },
+        "anonymous-param": {
+          "name": "anonymous-param",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "x",
+              "type": 7
+            }
+          ]
+        },
+        "anonymous-ret": {
+          "name": "anonymous-ret",
+          "kind": "freestanding",
+          "params": [],
+          "result": 8
+        },
+        "nested": {
+          "name": "nested",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "x",
+              "type": 10
+            }
+          ],
+          "result": 11
+        },
+        "option-map": {
+          "name": "option-map",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "x",
+              "type": 13
+            }
+          ],
+          "result": 15
+        },
+        "result-map": {
+          "name": "result-map",
+          "kind": "freestanding",
+          "params": [],
+          "result": 18
+        },
+        "record-map": {
+          "name": "record-map",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "x",
+              "type": 3
+            }
+          ],
+          "result": 3
+        },
+        "variant-map": {
+          "name": "variant-map",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "x",
+              "type": 6
+            }
+          ],
+          "result": 6
+        }
+      },
+      "package": 0
+    }
+  ],
+  "types": [
+    {
+      "name": "names",
+      "kind": {
+        "map": [
+          "string",
+          "u32"
+        ]
+      },
+      "owner": {
+        "interface": 0
+      }
+    },
+    {
+      "name": "same",
+      "kind": {
+        "map": [
+          "string",
+          "string"
+        ]
+      },
+      "owner": {
+        "interface": 0
+      }
+    },
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "string",
+          "string"
+        ]
+      },
+      "owner": null
+    },
+    {
+      "name": "config",
+      "kind": {
+        "record": {
+          "fields": [
+            {
+              "name": "labels",
+              "type": 2
+            },
+            {
+              "name": "counts",
+              "type": 0
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      }
+    },
+    {
+      "name": null,
+      "kind": {
+        "list": "string"
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "u32",
+          4
+        ]
+      },
+      "owner": null
+    },
+    {
+      "name": "entry",
+      "kind": {
+        "variant": {
+          "cases": [
+            {
+              "name": "empty",
+              "type": null
+            },
+            {
+              "name": "tags",
+              "type": 5
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      }
+    },
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "string",
+          "u64"
+        ]
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "char",
+          "bool"
+        ]
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "u8",
+          "f64"
+        ]
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "string",
+          9
+        ]
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "s64",
+          0
+        ]
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "bool",
+          "string"
+        ]
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "option": 12
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "u16",
+          "s8"
+        ]
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "option": 14
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "s16",
+          "u8"
+        ]
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "s32",
+          "string"
+        ]
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "result": {
+          "ok": 16,
+          "err": 17
+        }
+      },
+      "owner": null
+    }
+  ],
+  "packages": [
+    {
+      "name": "foo:foo",
+      "interfaces": {
+        "maps": 0
+      },
+      "worlds": {
+        "the-maps": 0
+      }
+    }
+  ]
+}

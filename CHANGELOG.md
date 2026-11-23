@@ -6,7 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- Read and print WIT map types. Go binding generation returns an error for a world that uses a map.
+- Read and print WIT map types.
+- Generate Go bindings for WIT `map<K, V>` as a `cm.List` of key and value tuples.
 
 ## [v0.10.0] — 2026-11-18
 

@@ -195,19 +195,6 @@ func newGenerator(res *wit.Resolve, opts ...Option) (*generator, error) {
 		g.world = first
 	}
 
-	if g.world != nil {
-		for _, td := range res.TypeDefs {
-			if _, ok := td.Kind.(*wit.Map); !ok || !wit.DependsOn(g.world, td) {
-				continue
-			}
-			name := td.TypeName()
-			if name == "" {
-				name = "(anonymous)"
-			}
-			return nil, fmt.Errorf("Go binding generation does not support WIT map types: %q in world %q", name, g.world.Name)
-		}
-	}
-
 	// Instantiate a wasm-tools instance.
 	g.wasmTools, err = wasmtools.New(context.Background())
 	if err != nil {
@@ -689,6 +676,8 @@ func (g *generator) typeDefRep(file *gen.File, dir wit.Direction, t *wit.TypeDef
 		return g.optionRep(file, dir, kind)
 	case *wit.List:
 		return g.listRep(file, dir, kind)
+	case *wit.Map:
+		return g.listRep(file, dir, kind.Despecialize().(*wit.List))
 	case *wit.Resource:
 		return g.resourceRep(file, dir, kind)
 	case *wit.Own:
@@ -1081,10 +1070,10 @@ func (g *generator) typeDefShape(file *gen.File, dir wit.Direction, t *wit.TypeD
 			// Results without associated types do not need a custom shape.
 			return g.typeRep(file, dir, t)
 		}
-	case *wit.Enum, *wit.Flags, *wit.List,
+	case *wit.Enum, *wit.Flags, *wit.List, *wit.Map,
 		*wit.Resource, *wit.Own, *wit.Borrow, *wit.Stream, *wit.Future:
 		// Certain types do not need custom type shapes:
-		// own, borrow, error-context, stream, future, enum, flags, and list
+		// own, borrow, error-context, stream, future, enum, flags, list, and map
 		return g.typeRep(file, dir, t)
 	}
 
@@ -1150,7 +1139,7 @@ func (g *generator) lowerTypeDef(file *gen.File, dir wit.Direction, t *wit.TypeD
 		return g.lowerResult(file, dir, t, input)
 	case *wit.Option:
 		return g.lowerOption(file, dir, t, input)
-	case *wit.List:
+	case *wit.List, *wit.Map:
 		return g.cmCall(file, "LowerList", input)
 	case *wit.Resource, *wit.Own, *wit.Borrow, *wit.Stream, *wit.Future:
 		return g.cmCall(file, "Reinterpret["+g.typeRep(file, dir, flat[0])+"]", input)
@@ -1365,7 +1354,7 @@ func (g *generator) liftTypeDef(file *gen.File, dir wit.Direction, t *wit.TypeDe
 		return g.liftResult(file, dir, t, input)
 	case *wit.Option:
 		return g.liftOption(file, dir, t, input)
-	case *wit.List:
+	case *wit.List, *wit.Map:
 		return g.cmCall(file, "LiftList["+g.typeRep(file, dir, t)+"]", input)
 	case *wit.Resource, *wit.Own, *wit.Borrow, *wit.Stream, *wit.Future:
 		return g.cmCall(file, "Reinterpret["+g.typeRep(file, dir, t)+"]", input)
