@@ -3,3 +3,4 @@
 /internal/wasmtools/target
 go.work.sum
 .wit-load-paths-*/
+/internal/wasmtools/wit-parser-*/

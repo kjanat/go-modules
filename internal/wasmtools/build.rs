@@ -65,7 +65,8 @@ fn main() {
         if !patch.exists() {
             continue;
         }
-        let local = out.join("wit-parser");
+        // Cargo hashes a path dependency by its workspace-relative path.
+        let local = Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("wit-parser-{version}"));
         if local.exists() {
             fs::remove_dir_all(&local).unwrap();
         }
@@ -77,17 +78,6 @@ fn main() {
             .current_dir(&local));
         let paths = serde_json::json!([local]);
         build.args(["--config", &format!("paths={paths}")]);
-        // trim-paths keeps a workspace-relative path, and this copy's path holds the build-script hash.
-        let relative = local
-            .strip_prefix(env::var("CARGO_MANIFEST_DIR").unwrap())
-            .unwrap();
-        build.env(
-            "CARGO_ENCODED_RUSTFLAGS",
-            format!(
-                "--remap-path-prefix={}=wit-parser-{version}",
-                relative.display()
-            ),
-        );
     }
     run(&mut build);
     let product = out
