@@ -1,76 +1,72 @@
 package cm
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"fmt"
 	"unsafe"
 )
 
-func (p pairs[K, V]) MarshalJSON() ([]byte, error) {
-	var b bytes.Buffer
-	b.WriteByte('{')
-	first := true
-	var err error
+func (p pairs[K, V]) MarshalJSONTo(enc *jsontext.Encoder) error {
+	if err := enc.WriteToken(jsontext.BeginObject); err != nil {
+		return err
+	}
 	for k, v := range p.All() {
-		if !first {
-			b.WriteByte(',')
-		}
-		first = false
-		var key, value []byte
-		key, err = marshalKey(k)
+		name, err := keyName(k)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		value, err = json.Marshal(v)
-		if err != nil {
-			return nil, err
+		if err := enc.WriteToken(jsontext.String(name)); err != nil {
+			return err
 		}
-		b.Write(key)
-		b.WriteByte(':')
-		b.Write(value)
+		if err := json.MarshalEncode(enc, v); err != nil {
+			return err
+		}
 	}
-	b.WriteByte('}')
-	return b.Bytes(), nil
+	return enc.WriteToken(jsontext.EndObject)
 }
 
-func marshalKey[K comparable](k K) ([]byte, error) {
+func keyName[K comparable](k K) (string, error) {
 	key, err := json.Marshal(k)
-	if err != nil || key[0] == '"' {
-		return key, err
+	if err != nil {
+		return "", err
 	}
-	return json.Marshal(string(key))
+	if jsontext.Value(key).Kind() != jsontext.KindString {
+		return string(key), nil
+	}
+	var name string
+	err = json.Unmarshal(key, &name)
+	return name, err
 }
 
-func (p *pairs[K, V]) UnmarshalJSON(data []byte) error {
-	if bytes.Equal(data, []byte("null")) {
-		return nil
+func (p *pairs[K, V]) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
+	if dec.PeekKind() == jsontext.KindNull {
+		_, err := dec.ReadToken()
+		return err
 	}
-	dec := json.NewDecoder(bytes.NewReader(data))
-	tok, err := dec.Token()
+	tok, err := dec.ReadToken()
 	if err != nil {
 		return err
 	}
-	if tok != json.Delim('{') {
-		return errors.New("cm: map JSON must be an object")
+	if tok.Kind() != jsontext.KindBeginObject {
+		return fmt.Errorf("cm: map JSON must be an object, not %v", tok.Kind())
 	}
 	var s []Tuple[K, V]
-	for dec.More() {
-		tok, err = dec.Token()
+	for dec.PeekKind() != jsontext.KindEndObject {
+		name, err := dec.ReadToken()
 		if err != nil {
 			return err
 		}
 		var e Tuple[K, V]
-		if err = unmarshalKey(tok.(string), &e.F0); err != nil {
+		if err := unmarshalKey(name.String(), &e.F0); err != nil {
 			return err
 		}
-		if err = dec.Decode(&e.F1); err != nil {
+		if err := json.UnmarshalDecode(dec, &e.F1); err != nil {
 			return err
 		}
 		s = append(s, e)
 	}
-	if _, err = dec.Token(); err != nil {
+	if _, err := dec.ReadToken(); err != nil {
 		return err
 	}
 	p.data = unsafe.SliceData(s)
