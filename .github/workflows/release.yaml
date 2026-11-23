@@ -18,11 +18,9 @@ jobs:
 
     strategy:
       matrix:
-        goos: [linux, windows, darwin]
-        goarch: [amd64, arm64]
-        exclude:
-          - goos: windows
-            goarch: arm64
+        GOOS: [linux, windows, darwin]
+        GOARCH: [amd64, arm64]
+        exclude: [{ GOOS: windows, GOARCH: arm64 }]
 
     steps:
       - name: Checkout repo
@@ -30,16 +28,13 @@ jobs:
 
       - name: Set up Go
         uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
+        with: { go-version-file: go.mod }
 
       - name: Run Go tests
         run: go test ./... ./cm/...
 
       - name: Build binary
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
+        env: { "${{ insert }}": "${{ fromjson(matrix) }}" }
         run: |
           mkdir -p build
           go build -o wit-bindgen-go ./cmd/wit-bindgen-go
@@ -48,8 +43,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: wit-bindgen-go_${{ matrix.goos }}_${{ matrix.goarch }}
-          path: build/wit-bindgen-go-${{ matrix.goos }}-${{ matrix.goarch }}.tgz
+          name: wit-bindgen-go_${{ matrix.GOOS }}_${{ matrix.GOARCH }}
+          path: build/wit-bindgen-go-${{ matrix.GOOS }}-${{ matrix.GOARCH }}.tgz
           retention-days: 1
 
   release:
@@ -71,20 +66,16 @@ jobs:
           merge-multiple: true # all artifacts are downloaded to this directory
 
       - name: Extract release notes
-        run: ./scripts/extract-changelog.sh "$GITHUB_REF_NAME" > RELEASE_NOTES.md
+        run: ./scripts/extract-changelog.sh "${GITHUB_REF_NAME}" > RELEASE_NOTES.md
 
       - name: Get Beepboop publication token
         id: beepboop
         uses: kjanat/beepboop/actions/token@v1
-        with:
-          permission-contents: write
+        with: { permission-contents: write }
       - name: Create release
-        env:
-          GH_TOKEN: ${{ steps.beepboop.outputs.token }}
+        env: { GH_TOKEN: "${{ steps.beepboop.outputs.token }}" }
         run: |
           flags=()
-          if [[ "${GITHUB_REF_NAME%%+*}" == *-* ]]; then
-            flags+=(--prerelease --latest=false)
-          fi
-          gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" \
-            --notes-file RELEASE_NOTES.md "${flags[@]}" build/*.tgz
+          if [[ "${GITHUB_REF_NAME%%+*}" == *-* ]]; then flags+=(--prerelease --latest=false); fi
+          gh release create "${GITHUB_REF_NAME}" --verify-tag --title "${GITHUB_REF_NAME}" \
+            --notes-file RELEASE_NOTES.md "${flags[@]}" ./build/*.tgz
