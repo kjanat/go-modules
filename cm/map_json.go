@@ -12,7 +12,7 @@ func (p pairs[K, V]) MarshalJSONTo(enc *jsontext.Encoder) error {
 		return err
 	}
 	for k, v := range p.All() {
-		name, err := keyName(k)
+		name, err := keyName(k, enc.Options())
 		if err != nil {
 			return err
 		}
@@ -26,8 +26,8 @@ func (p pairs[K, V]) MarshalJSONTo(enc *jsontext.Encoder) error {
 	return enc.WriteToken(jsontext.EndObject)
 }
 
-func keyName[K comparable](k K) (string, error) {
-	key, err := json.Marshal(k)
+func keyName[K comparable](k K, opts json.Options) (string, error) {
+	key, err := json.Marshal(k, opts)
 	if err != nil {
 		return "", err
 	}
@@ -58,7 +58,7 @@ func (p *pairs[K, V]) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 			return err
 		}
 		var e Tuple[K, V]
-		if err := unmarshalKey(name.String(), &e.F0); err != nil {
+		if err := unmarshalKey(name.String(), &e.F0, dec.Options()); err != nil {
 			return err
 		}
 		if err := json.UnmarshalDecode(dec, &e.F1); err != nil {
@@ -74,18 +74,18 @@ func (p *pairs[K, V]) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
 	return nil
 }
 
-func unmarshalKey[K comparable](text string, k *K) error {
+func unmarshalKey[K comparable](text string, k *K, opts json.Options) error {
 	quoted, err := json.Marshal(text)
 	if err != nil {
 		return err
 	}
-	if json.Unmarshal(quoted, k) == nil {
+	if json.Unmarshal(quoted, k, opts) == nil {
 		return nil
 	}
-	if err := json.Unmarshal([]byte(text), k); err != nil {
+	if err := json.Unmarshal([]byte(text), k, opts); err != nil {
 		return err
 	}
-	canonical, err := json.Marshal(*k)
+	canonical, err := json.Marshal(*k, opts)
 	if err != nil {
 		return err
 	}
