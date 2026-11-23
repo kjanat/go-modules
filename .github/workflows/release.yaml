@@ -76,13 +76,11 @@ jobs:
       - name: Extract release notes
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
-          cd "$GITHUB_WORKSPACE"
-          ./scripts/extract-changelog.sh "$TAG_NAME" > RELEASE_NOTES.md
-          cat RELEASE_NOTES.md
+          bash "${GITHUB_WORKSPACE}/scripts/extract-changelog.sh" "${TAG_NAME}" | tee "${GITHUB_WORKSPACE}/RELEASE_NOTES.md"
 
       - name: Get Beepboop publication token
         id: beepboop
-        uses: kjanat/beepboop/actions/token@3a861875a1dd51f12d1e4f47d8c1bcbd68a7c665 # v1.10.7
+        uses: kjanat/beepboop/actions/token@v1
         with:
           permission-contents: write
       - name: Create release
