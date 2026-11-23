@@ -1,0 +1,11 @@
+[tools]
+go     = "latest"
+kprint = "0.64.1"
+tinygo = "0.44.0"
+
+[tool_alias]
+kprint = "github:kjanat/kprint"
+tinygo = "github:tinygo-org/tinygo"
+
+[settings]
+idiomatic_version_file_enable_tools = ["go"]

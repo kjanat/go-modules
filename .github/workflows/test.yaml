@@ -85,7 +85,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        tinygo-version: ["0.43.0"]
+        tinygo-version: ["0.44.0"]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v7
@@ -115,7 +115,7 @@ jobs:
     timeout-minutes: 15
     strategy:
       matrix:
-        tinygo-version: ["0.43.0"]
+        tinygo-version: ["0.44.0"]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v7
@@ -162,7 +162,7 @@ jobs:
           version: ${{ env.wasmtime-version }}
 
       - name: Add Go wasm exec to $PATH
-        run: echo "$(go env GOROOT)/lib/wasm" >> "$GITHUB_PATH"
+        run: echo "$(go env GOROOT)/lib/wasm" >> "${GITHUB_PATH}"
 
       - name: Regenerate Go
         run: make tests/generated
