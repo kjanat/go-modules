@@ -18,6 +18,14 @@
       "matchPackageNames": ["wasm-tools"],
       "rangeStrategy": "pin",
       "automerge": false
+    },
+    {
+      "description": "Read go.bytecodealliance.org/cm versions from its cm/v* tags",
+      "matchDatasources": ["go"],
+      "matchPackageNames": ["go.bytecodealliance.org/cm"],
+      "overrideDatasource": "github-tags",
+      "overridePackageName": "bytecodealliance/go-modules",
+      "extractVersion": "^cm/(?<version>v\\d+\\.\\d+\\.\\d+)$"
     }
   ]
 }
