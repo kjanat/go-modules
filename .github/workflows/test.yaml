@@ -17,7 +17,6 @@ permissions:
 env:
   GOTOOLCHAIN: local
   go-modules: ./... ./cm/...
-  wasmtime-version: "26.0.0"
 
 jobs:
   # Vet Go code
@@ -32,9 +31,9 @@ jobs:
           submodules: recursive
 
       - name: Set up Go
-        uses: actions/setup-go@v7
+        uses: jdx/mise-action@v5
         with:
-          go-version-file: go.mod
+          install_args: go
 
       - name: Vet Go code
         run: go vet ${{ env.go-modules }} ./tests/...
@@ -54,9 +53,9 @@ jobs:
           submodules: recursive
 
       - name: Set up Go
-        uses: actions/setup-go@v7
+        uses: jdx/mise-action@v5
         with:
-          go-version-file: go.mod
+          install_args: go
 
       - name: Run Go tests
         run: go test -v ${{ env.go-modules }}
@@ -83,24 +82,16 @@ jobs:
     name: Test with TinyGo
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      matrix:
-        tinygo-version: ["0.44.0"]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v7
         with:
           submodules: recursive
 
-      - name: Set up Go
-        uses: actions/setup-go@v7
+      - name: Set up Go and TinyGo
+        uses: jdx/mise-action@v5
         with:
-          go-version-file: go.mod
-
-      - name: Set up TinyGo
-        uses: acifani/setup-tinygo@v3
-        with:
-          tinygo-version: ${{ matrix.tinygo-version }}
+          install_args: go tinygo
 
       - name: Test with TinyGo
         run: tinygo test -v ${{ env.go-modules }}
@@ -113,24 +104,16 @@ jobs:
     name: Test with WebAssembly
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      matrix:
-        tinygo-version: ["0.44.0"]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v7
         with:
           submodules: recursive
 
-      - name: Set up Go
-        uses: actions/setup-go@v7
+      - name: Set up Go, TinyGo and Wasmtime
+        uses: jdx/mise-action@v5
         with:
-          go-version-file: go.mod
-
-      - name: Set up TinyGo
-        uses: acifani/setup-tinygo@v3
-        with:
-          tinygo-version: ${{ matrix.tinygo-version }}
+          install_args: go tinygo wasmtime
 
       - name: Read the shipped CLI version
         id: guest
@@ -152,14 +135,11 @@ jobs:
 
       # TinyGo needs the matching native CLI for -target=wasip2.
       - name: Set up wasm-tools
-        uses: bytecodealliance/actions/wasm-tools/setup@v1
-        with:
-          version: ${{ steps.guest.outputs.version }}
-
-      - name: Set up Wasmtime
-        uses: bytecodealliance/actions/wasmtime/setup@v1
-        with:
-          version: ${{ env.wasmtime-version }}
+        env:
+          MISE_WASM_TOOLS_VERSION: ${{ steps.guest.outputs.version }}
+        run: |
+          mise install wasm-tools
+          echo "MISE_WASM_TOOLS_VERSION=$MISE_WASM_TOOLS_VERSION" >> "$GITHUB_ENV"
 
       - name: Add Go wasm exec to $PATH
         run: echo "$(go env GOROOT)/lib/wasm" >> "${GITHUB_PATH}"

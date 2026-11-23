@@ -20,8 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
-        with: { go-version-file: go.mod }
+      - uses: jdx/mise-action@v5
+        with: { install_args: go }
       - name: Build guest from locked sources
         run: make wasm-tools
       - name: Exercise candidate through the Go host and generator

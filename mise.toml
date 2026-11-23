@@ -1,8 +1,26 @@
+[tasks]
+fmt             = { run = "kprint fmt", alias = ["f", "format"] }
+"fmt:check"     = { run = "kprint check", description = "List files kprint would reformat" }
+vet             = { run = "go vet ./... ./cm/... ./tests/...", description = "Vet every module" }
+test            = { run = "go test ./... ./cm/...", alias = ["t"], description = "Test the root and cm modules" }
+"test:tinygo"   = { run = "tinygo test ./... ./cm/...", description = "Test the root and cm modules with TinyGo" }
+"test:wasm"     = { run = [
+  'PATH="$(go env GOROOT)/lib/wasm:$PATH" GOOS=wasip1 GOARCH=wasm go test ./... ./cm/...',
+  "tinygo test -target=wasip1 ./... ./cm/...",
+  "tinygo test -target=wasip2 ./... ./cm/...",
+  "tinygo test -target=wasip2 ./tests/...",
+], description = "Test on wasip1 with Go and TinyGo and on wasip2 with TinyGo" }
+"test:consumer" = { run = "go test ./cm/... ./json/... ./maps/...", dir = "tests", env = { GOWORK = "off" }, description = "Test generated bindings from the tests module without the workspace" }
+json            = { run = "make json", description = "Regenerate testdata JSON with wasm-tools" }
+golden          = { run = "make golden", description = "Regenerate testdata JSON and golden WIT files" }
+generate        = { run = "make tests/generated", alias = ["gen"], description = "Regenerate the Go bindings in tests" }
+wasm-tools      = { run = "make wasm-tools", description = "Rebuild the embedded wasm-tools guest from Cargo.lock" }
+
 [tools]
-go         = "latest"
 kprint     = "0.64.1"
 tinygo     = "0.44.0"
 wasm-tools = "{{ read_toml(path='internal/wasmtools/Cargo.toml')['target']['cfg(target_os = \"wasi\")']['dependencies']['wasm-tools']['version'] | trim_start(pat='=') }}"
+wasmtime   = "51.0.0"
 
 [tool_alias]
 kprint = "github:kjanat/kprint"
