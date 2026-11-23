@@ -82,7 +82,7 @@ jobs:
           path: candidate
       - name: Get Beepboop publication token
         id: beepboop
-        uses: kjanat/beepboop/actions/token@3a861875a1dd51f12d1e4f47d8c1bcbd68a7c665 # v1.10.7
+        uses: kjanat/beepboop/actions/token@1c2bf8c23ee6d25fcc9307ee5c420a029e3dbeb3 # v1.10.22
         with:
           permission-contents: write
           permission-pull-requests: write
