@@ -1,6 +1,6 @@
 # github.com/kjanat/go-modules
 
-Actionlint's maintained fork of [bytecodealliance/go-modules](https://github.com/bytecodealliance/go-modules), including the WIT loader path and runtime cleanup fixes in [#429](https://github.com/bytecodealliance/go-modules/pull/429). Import `github.com/kjanat/go-modules`; the separate `go.bytecodealliance.org/cm` module stays upstream. Fork changes ship under this module path and its own version tags.
+Actionlint's maintained fork of [bytecodealliance/go-modules](https://github.com/bytecodealliance/go-modules), including the WIT loader path and runtime cleanup fixes in [#429](https://github.com/bytecodealliance/go-modules/pull/429).
 
 [![pkg.go.dev](https://img.shields.io/badge/docs-pkg.go.dev-blue.svg)](https://pkg.go.dev/github.com/kjanat/go-modules) [![build status](https://img.shields.io/github/actions/workflow/status/kjanat/go-modules/test.yaml?branch=master)](https://github.com/kjanat/go-modules/actions)
 
@@ -13,6 +13,8 @@ Package `wit/bindgen` contains code to generate Go bindings for [Component Model
 ### Component Model
 
 Package `cm` contains helper types and functions used by generated packages, such as `option<t>`, `result<ok, err>`, `variant`, `list`, and `resource`. These are intended for use by generated [Component Model](https://github.com/WebAssembly/component-model/blob/main/design/mvp/Explainer.md#type-definitions) bindings, where the caller converts to a Go equivalent. It attempts to map WIT semantics to their equivalent in Go where possible.
+
+Generated code imports module `github.com/kjanat/go-modules/cm`. Its types are aliases of the `go.bytecodealliance.org/cm` types, and values pass between bindings generated for either path. It adds `cm.Map` for WIT `map<K, V>`.
 
 ## `wit-bindgen-go`
 
@@ -57,6 +59,10 @@ This will emit JSON on `stdout`, which can be piped to a file or another program
 ```console
 wasm-tools component wit -j --all-features example.wit > example.wit.json
 ```
+
+## Standard Go on `wasip1`
+
+TinyGo builds every generated map signature. Standard Go with `GOOS=wasip1 GOARCH=wasm` compiles a map parameter with numeric keys and values, such as `map<u32, u32>`. Its `go:wasmimport` and `go:wasmexport` checks reject a map parameter whose keys or values contain a string, list, or map, and every map result, which the generated code returns through a pointer.
 
 ## Memory Safety and Garbage Collection
 

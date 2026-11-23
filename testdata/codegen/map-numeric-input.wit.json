@@ -1,0 +1,64 @@
+{
+  "worlds": [
+    {
+      "name": "numeric-map-input",
+      "imports": {
+        "interface-0": {
+          "interface": {
+            "id": 0
+          }
+        }
+      },
+      "exports": {
+        "interface-0": {
+          "interface": {
+            "id": 0
+          }
+        }
+      },
+      "package": 0
+    }
+  ],
+  "interfaces": [
+    {
+      "name": "counts",
+      "types": {},
+      "functions": {
+        "tally": {
+          "name": "tally",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "x",
+              "type": 0
+            }
+          ]
+        }
+      },
+      "package": 0
+    }
+  ],
+  "types": [
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "u32",
+          "u32"
+        ]
+      },
+      "owner": null
+    }
+  ],
+  "packages": [
+    {
+      "name": "foo:foo",
+      "interfaces": {
+        "counts": 0
+      },
+      "worlds": {
+        "numeric-map-input": 0
+      }
+    }
+  ]
+}

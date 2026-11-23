@@ -4,7 +4,7 @@
 package stdin
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 	"tests/generated/wasi/io/v0.2.0/streams"
 )
 

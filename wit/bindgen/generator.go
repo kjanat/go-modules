@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	cmPackage = "go.bytecodealliance.org/cm"
+	cmPackage = "github.com/kjanat/go-modules/cm"
 	emptyAsm  = `// This file exists for testing this package without WebAssembly,
 // allowing empty function bodies with a //go:wasmimport directive.
 // See https://pkg.go.dev/cmd/compile for more information.
@@ -677,7 +677,7 @@ func (g *generator) typeDefRep(file *gen.File, dir wit.Direction, t *wit.TypeDef
 	case *wit.List:
 		return g.listRep(file, dir, kind)
 	case *wit.Map:
-		return g.listRep(file, dir, kind.Despecialize().(*wit.List))
+		return g.mapRep(file, dir, kind)
 	case *wit.Resource:
 		return g.resourceRep(file, dir, kind)
 	case *wit.Own:
@@ -1010,6 +1010,12 @@ func (g *generator) listRep(file *gen.File, dir wit.Direction, l *wit.List) stri
 	return b.String()
 }
 
+func (g *generator) mapRep(file *gen.File, dir wit.Direction, m *wit.Map) string {
+	var b strings.Builder
+	stringio.Write(&b, file.Import(g.opts.cmPackage), ".Map[", g.typeRep(file, dir, m.Key), ", ", g.typeRep(file, dir, m.Value), "]")
+	return b.String()
+}
+
 func (g *generator) resourceRep(file *gen.File, dir wit.Direction, r *wit.Resource) string {
 	return file.Import(g.opts.cmPackage) + ".Resource"
 }
@@ -1139,8 +1145,11 @@ func (g *generator) lowerTypeDef(file *gen.File, dir wit.Direction, t *wit.TypeD
 		return g.lowerResult(file, dir, t, input)
 	case *wit.Option:
 		return g.lowerOption(file, dir, t, input)
-	case *wit.List, *wit.Map:
+	case *wit.List:
 		return g.cmCall(file, "LowerList", input)
+	case *wit.Map:
+		entry := kind.Despecialize().(*wit.List).Type
+		return g.cmCall(file, "LowerMap["+g.typeRep(file, dir, entry)+"]", input)
 	case *wit.Resource, *wit.Own, *wit.Borrow, *wit.Stream, *wit.Future:
 		return g.cmCall(file, "Reinterpret["+g.typeRep(file, dir, flat[0])+"]", input)
 	default:
@@ -1354,8 +1363,10 @@ func (g *generator) liftTypeDef(file *gen.File, dir wit.Direction, t *wit.TypeDe
 		return g.liftResult(file, dir, t, input)
 	case *wit.Option:
 		return g.liftOption(file, dir, t, input)
-	case *wit.List, *wit.Map:
+	case *wit.List:
 		return g.cmCall(file, "LiftList["+g.typeRep(file, dir, t)+"]", input)
+	case *wit.Map:
+		return g.cmCall(file, "LiftMap["+g.typeRep(file, dir, t)+"]", input)
 	case *wit.Resource, *wit.Own, *wit.Borrow, *wit.Stream, *wit.Future:
 		return g.cmCall(file, "Reinterpret["+g.typeRep(file, dir, t)+"]", input)
 	default:

@@ -10,7 +10,7 @@
 package terminaloutput
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 )
 
 // TerminalOutput represents the imported resource "wasi:cli/terminal-output@0.2.0#terminal-output".

@@ -41,14 +41,15 @@ world example {
 	}
 	generated := b.String()
 	for _, want := range []string{
-		"type Table cm.List[cm.Tuple[string, uint32]]",
+		`"github.com/kjanat/go-modules/cm"`,
+		"type Table cm.Map[string, uint32]",
 		"func Echo(input Table) (result Table)",
-		"input0, input1 := cm.LowerList(input)",
+		"input0, input1 := cm.LowerMap[cm.Tuple[string, uint32]](input)",
 		"func wasmimport_Echo(input0 *cm.Tuple[string, uint32], input1 uint32, result *Table)",
-		"input := cm.LiftList[Table]((*cm.Tuple[string, uint32])(input0), (uint32)(input1))",
-		"func Pairs(input cm.Option[cm.List[[2]string]])",
-		"v1, v2 := cm.LowerList(*some)",
-		"cm.LiftList[cm.List[[2]string]]((*[2]string)(f1), (uint32)(f2))",
+		"input := cm.LiftMap[Table]((*cm.Tuple[string, uint32])(input0), (uint32)(input1))",
+		"func Pairs(input cm.Option[cm.Map[string, string]])",
+		"v1, v2 := cm.LowerMap[[2]string](*some)",
+		"cm.LiftMap[cm.Map[string, string]]((*[2]string)(f1), (uint32)(f2))",
 	} {
 		if !strings.Contains(generated, want) {
 			t.Errorf("generated Go is missing %q", want)

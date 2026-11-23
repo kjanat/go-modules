@@ -1,0 +1,10 @@
+package foo:foo;
+
+interface counts {
+  tally: func(x: map<u32, u32>);
+}
+
+world numeric-map-input {
+  import counts;
+  export counts;
+}

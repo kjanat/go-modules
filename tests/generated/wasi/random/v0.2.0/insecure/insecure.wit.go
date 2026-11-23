@@ -9,7 +9,7 @@
 package insecure
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 )
 
 // GetInsecureRandomBytes represents the imported function "get-insecure-random-bytes".

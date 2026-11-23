@@ -4,7 +4,7 @@
 package exit
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 )
 
 // Exit represents the imported function "exit".

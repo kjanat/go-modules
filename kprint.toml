@@ -1,0 +1,10 @@
+#:schema https://github.com/kjanat/kjanat/raw/refs/heads/master/schemas/dprint.schema.json
+
+extends  = "https://raw.githubusercontent.com/kjanat/kjanat/refs/heads/master/configs/dprint.remote.json"
+excludes = ["**/testdata", "**/generated"]
+
+[json]
+useTabs = true
+
+[exec]
+playWithFire = true

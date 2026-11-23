@@ -4,7 +4,7 @@
 package environment
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 )
 
 // GetEnvironment represents the imported function "get-environment".

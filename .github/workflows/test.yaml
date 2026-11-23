@@ -6,11 +6,10 @@ on:
       - master
   pull_request:
     paths-ignore:
-        - '.prettier*'
-        - '.vscode/**'
-        - '**/*.md'
-        - 'docs/**'
-        - 'LICENSE'
+      - ".vscode/**"
+      - "**/*.md"
+      - "docs/**"
+      - "LICENSE"
 
 permissions:
   contents: read
@@ -69,6 +68,12 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: go test -v ${{ env.go-modules }}
+
+      - name: Test generated map bindings from a consumer module
+        working-directory: tests
+        env:
+          GOWORK: "off"
+        run: go test -v ./cm/... ./json/... ./maps/...
 
       - name: Verify repo is unchanged
         run: git diff --exit-code HEAD
@@ -179,6 +184,24 @@ jobs:
 
       - name: Test generated Go with TinyGo
         run: tinygo test -v -target wasip2 ./tests/...
+
+      - name: Test generated map bindings with TinyGo from a consumer module
+        working-directory: tests
+        env:
+          GOWORK: "off"
+        run: tinygo test -v -target=wasip1 ./maps/...
+
+      - name: Build the map fixture guest with TinyGo
+        working-directory: tests
+        run: tinygo build -target=wasip1 -o "$RUNNER_TEMP/maps.wasm" ./guest/maps
+
+      - name: Compile numeric map input bindings with Go
+        working-directory: tests
+        env:
+          GOARCH: wasm
+          GOOS: wasip1
+          GOWORK: "off"
+        run: go build ./numeric/...
 
       - name: Verify repo is unchanged
         run: git diff --exit-code HEAD

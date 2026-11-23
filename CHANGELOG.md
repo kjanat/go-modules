@@ -7,7 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Read and print WIT map types.
-- Generate Go bindings for WIT `map<K, V>` as a `cm.List` of key and value tuples.
+- Generate Go bindings for WIT `map<K, V>` as `cm.Map[K, V]`. `Get`, `All`, `Len`, and `Map` resolve duplicate keys to the last value, as the WIT specification requires. Lowering passes every pair to the ABI.
+
+### Changed
+
+- Breaking: generated code imports `github.com/kjanat/go-modules/cm` by default. That module aliases every `go.bytecodealliance.org/cm` type, and values pass between both import paths unchanged. Run `go get github.com/kjanat/go-modules/cm` in modules that build generated code. A package selected with `--cm` or `CMPackage` must provide `Map`, `LowerMap`, and `LiftMap` to build bindings that use WIT maps.
 
 ## [v0.10.0] — 2026-11-18
 
