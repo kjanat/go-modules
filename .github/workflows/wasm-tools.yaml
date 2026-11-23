@@ -44,6 +44,9 @@ jobs:
           path: candidate/
           retention-days: 30
   promote:
+    outputs:
+      tag: ${{ steps.publish.outputs.tag }}
+      digest: ${{ steps.publish.outputs.digest }}
     if: github.event.action == 'closed' && github.event.pull_request.merged && github.repository == 'kjanat/go-modules' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
@@ -82,18 +85,54 @@ jobs:
           path: candidate
       - name: Get Beepboop publication token
         id: beepboop
-        uses: kjanat/beepboop/actions/token@3a861875a1dd51f12d1e4f47d8c1bcbd68a7c665 # v1.10.7
+        uses: kjanat/beepboop/actions/token@v1
         with:
           permission-contents: write
-          permission-pull-requests: write
-      - name: Release the tested bytes
+      - name: Publish wasm-tools
+        id: publish
         env: { GH_TOKEN: "${{ steps.beepboop.outputs.token }}" }
-        run: bash scripts/wasm-tools/release.sh
-      - name: Propose the embedded guest update
+        run: |
+          bash scripts/wasm-tools/release.sh
+          echo "tag=$(cat candidate/tag)" >> "$GITHUB_OUTPUT"
+          echo "digest=$(sha256sum candidate/wasm-tools.wasm.gz | cut -d ' ' -f1)" >> "$GITHUB_OUTPUT"
+
+  update-guest:
+    needs: promote
+    runs-on: ubuntu-latest
+    concurrency: update-guest-${{ needs.promote.outputs.tag }}
+    permissions:
+      contents: read
+      pull-requests: read
+      id-token: write
+    env:
+      TAG: ${{ needs.promote.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with: { ref: master, persist-credentials: false }
+      - name: Check for a previous guest update
+        id: previous
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          number=$(gh pr list --base master --head "update/$TAG" --state all --json number --jq '.[0].number // empty')
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+      - name: Install the published guest
+        if: steps.previous.outputs.number == ''
         env:
-          GH_TOKEN: ${{ steps.beepboop.outputs.token }}
-          GIT_AUTHOR_NAME: ${{ steps.beepboop.outputs.bot-login }}
-          GIT_AUTHOR_EMAIL: ${{ steps.beepboop.outputs.bot-email }}
-          GIT_COMMITTER_NAME: ${{ steps.beepboop.outputs.bot-login }}
-          GIT_COMMITTER_EMAIL: ${{ steps.beepboop.outputs.bot-email }}
-        run: bash scripts/wasm-tools/consume.sh
+          GH_TOKEN: ${{ github.token }}
+          DIGEST: ${{ needs.promote.outputs.digest }}
+        run: |
+          gh release download "$TAG" --pattern wasm-tools.wasm.gz --dir "$RUNNER_TEMP"
+          echo "$DIGEST  $RUNNER_TEMP/wasm-tools.wasm.gz" | sha256sum --check
+          cp "$RUNNER_TEMP/wasm-tools.wasm.gz" internal/wasmtools/
+          echo "$TAG" > internal/wasmtools/embedded-release
+      - name: Open guest update PR
+        if: steps.previous.outputs.number == ''
+        uses: kjanat/beepboop/actions/pull-request@v1
+        with:
+          base: master
+          branch: update/${{ env.TAG }}
+          title: Update embedded guest to ${{ env.TAG }}
+          body: "${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ env.TAG }}"
+          add-paths: |
+            internal/wasmtools/wasm-tools.wasm.gz
+            internal/wasmtools/embedded-release

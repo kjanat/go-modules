@@ -5,14 +5,15 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.*'
 
+permissions:
+  contents: read
+
 env:
-  go-modules: ./... ./cm/...
+  CGO_ENABLED: "0"
 
 jobs:
   build:
     name: Build binaries
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
 
     strategy:
@@ -33,20 +34,16 @@ jobs:
           go-version-file: go.mod
 
       - name: Run Go tests
-        env:
-          # Test with the same environment as the build.
-          CGO_ENABLED: 0
-        run: go test ${{ env.go-modules }}
+        run: go test ./... ./cm/...
 
       - name: Build binary
         env:
-          # Disable cgo so the pre-built binary is statically linked for maximum compatibility.
-          CGO_ENABLED: 0
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
         run: |
           mkdir -p build
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o wit-bindgen-go ./cmd/wit-bindgen-go
-          tar -czvf build/wit-bindgen-go-${{ matrix.goos }}-${{ matrix.goarch }}.tgz wit-bindgen-go
-          rm wit-bindgen-go
+          go build -o wit-bindgen-go ./cmd/wit-bindgen-go
+          tar -czf "build/wit-bindgen-go-${GOOS}-${GOARCH}.tgz" wit-bindgen-go
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -74,9 +71,7 @@ jobs:
           merge-multiple: true # all artifacts are downloaded to this directory
 
       - name: Extract release notes
-        run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          bash "${GITHUB_WORKSPACE}/scripts/extract-changelog.sh" "${TAG_NAME}" | tee "${GITHUB_WORKSPACE}/RELEASE_NOTES.md"
+        run: ./scripts/extract-changelog.sh "$GITHUB_REF_NAME" > RELEASE_NOTES.md
 
       - name: Get Beepboop publication token
         id: beepboop
@@ -87,15 +82,9 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.beepboop.outputs.token }}
         run: |
-          ls -R build/
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          if [[ "$TAG_NAME" =~ .+-pre.* ]]; then
-            PRERELEASE_ARGS=(--prerelease --latest=false)
-          else
-            PRERELEASE_ARGS=()
+          flags=()
+          if [[ "${GITHUB_REF_NAME%%+*}" == *-* ]]; then
+            flags+=(--prerelease --latest=false)
           fi
-          gh release create "${{ github.ref_name }}" \
-            --notes-file RELEASE_NOTES.md \
-            --title "${{ github.ref_name }}" \
-            "${PRERELEASE_ARGS[@]}" \
-            build/*
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" \
+            --notes-file RELEASE_NOTES.md "${flags[@]}" build/*.tgz
