@@ -564,6 +564,7 @@ var witKeywords = map[string]bool{
 	"include":       true,
 	"interface":     true,
 	"list":          true,
+	"map":           true,
 	"option":        true,
 	"own":           true,
 	"package":       true,
@@ -958,6 +959,18 @@ func (l *List) WIT(_ Node, name string) string {
 	b.WriteString(l.Type.WIT(l, ""))
 	b.WriteRune('>')
 	return b.String()
+}
+
+// WITKind returns the WIT kind.
+func (*Map) WITKind() string { return "map" }
+
+// WIT returns the WIT text format for m.
+func (m *Map) WIT(_ Node, name string) string {
+	typ := "map<" + m.Key.WIT(m, "") + ", " + m.Value.WIT(m, "") + ">"
+	if name == "" {
+		return typ
+	}
+	return "type " + escape(name) + " = " + typ
 }
 
 // WITKind returns the WIT kind.

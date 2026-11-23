@@ -4,6 +4,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## Unreleased
 
+### Added
+
+- Read and print WIT map types. Go binding generation still rejects maps explicitly.
+
 ## [v0.10.0] — 2026-11-18
 
 ### Changed

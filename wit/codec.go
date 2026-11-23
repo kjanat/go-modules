@@ -357,6 +357,15 @@ func (c *typeDefKindCodec) DecodeField(dec codec.Decoder, name string) error {
 		v := &List{}
 		err = dec.Decode(&v.Type)
 		*c.v = v
+	case "map":
+		var pair mapTypeCodec
+		if err := dec.Decode(&pair); err != nil {
+			return err
+		}
+		if pair[0] == nil || pair[1] == nil {
+			return fmt.Errorf("invalid WIT map: expected key and value types")
+		}
+		*c.v = &Map{Key: pair[0], Value: pair[1]}
 	case "variant":
 		v := &Variant{}
 		err = dec.Decode(v)
@@ -389,6 +398,16 @@ func (c *typeDefKindCodec) DecodeField(dec codec.Decoder, name string) error {
 		return fmt.Errorf("unsupported WIT type kind %q", name)
 	}
 	return err
+}
+
+// wasm-tools emits a map type as {"map":[key,value]}.
+type mapTypeCodec [2]Type
+
+func (m *mapTypeCodec) DecodeElement(dec codec.Decoder, i int) error {
+	if i >= len(m) {
+		return fmt.Errorf("invalid WIT map: expected exactly two type entries")
+	}
+	return dec.Decode(&m[i])
 }
 
 // DecodeField implements the [codec.FieldDecoder] interface

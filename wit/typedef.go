@@ -124,7 +124,7 @@ func (t *TypeDef) dependsOn(dep Node) bool {
 
 // TypeDefKind represents the underlying type in a [TypeDef], which can be one of
 // [Record], [Resource], [Handle], [Flags], [Tuple], [Variant], [Enum],
-// [Option], [Result], [List], [Future], [Stream], or [Type].
+// [Option], [Result], [List], [Map], [Future], [Stream], or [Type].
 // It implements the [Node] and [ABI] interfaces.
 type TypeDefKind interface {
 	Node
