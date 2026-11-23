@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"unsafe"
 )
 
@@ -85,5 +86,15 @@ func unmarshalKey[K comparable](text string, k *K) error {
 	if json.Unmarshal(quoted, k) == nil {
 		return nil
 	}
-	return json.Unmarshal([]byte(text), k)
+	if err := json.Unmarshal([]byte(text), k); err != nil {
+		return err
+	}
+	canonical, err := json.Marshal(*k)
+	if err != nil {
+		return err
+	}
+	if string(canonical) != text {
+		return fmt.Errorf("cm: invalid map key %q", text)
+	}
+	return nil
 }

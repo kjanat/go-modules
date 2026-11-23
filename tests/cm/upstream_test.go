@@ -18,6 +18,11 @@ func TestUpstreamAPI(t *testing.T) {
 	if len(pkgs) != 2 {
 		t.Fatalf("loaded %d packages; want 2", len(pkgs))
 	}
+	for _, pkg := range pkgs {
+		if len(pkg.Errors) > 0 || pkg.IllTyped {
+			t.Fatalf("loading %s: %v", pkg.PkgPath, pkg.Errors)
+		}
+	}
 	up, fork := pkgs[0].Types, pkgs[1].Types
 	if up.Path() != "go.bytecodealliance.org/cm" {
 		up, fork = fork, up

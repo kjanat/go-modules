@@ -81,21 +81,22 @@ func (p pairs[K, V]) Map() map[K]V {
 	return m
 }
 
-func LowerMap[E any, M AnyMap[K, V], K comparable, V any](m M) (*E, uint32) {
+func LowerMap[E Tuple[K, V] | [2]K, M AnyMap[K, V], K comparable, V any](m M) (*E, uint32) {
 	checkEntry[E, K, V]()
 	p := (*Map[K, V])(unsafe.Pointer(&m))
 	return (*E)(unsafe.Pointer(p.data)), uint32(p.len)
 }
 
-func LiftMap[M AnyMap[K, V], K comparable, V any, E any, Len AnyInteger](data *E, len Len) M {
+func LiftMap[M AnyMap[K, V], K comparable, V any, E Tuple[K, V] | [2]K, Len AnyInteger](data *E, len Len) M {
 	checkEntry[E, K, V]()
 	return M(Map[K, V]{data: (*Tuple[K, V])(unsafe.Pointer(data)), len: uintptr(len)})
 }
 
-func checkEntry[E any, K comparable, V any]() {
-	var e E
-	var t Tuple[K, V]
-	if unsafe.Sizeof(e) != unsafe.Sizeof(t) || unsafe.Alignof(e) != unsafe.Alignof(t) {
-		panic("cm: map entry type does not match Tuple[K, V]")
+func checkEntry[E Tuple[K, V] | [2]K, K comparable, V any]() {
+	if _, ok := any((*E)(nil)).(*[2]K); !ok {
+		return
+	}
+	if _, ok := any((*K)(nil)).(*V); !ok {
+		panic("cm: map entry [2]K requires identical key and value types")
 	}
 }

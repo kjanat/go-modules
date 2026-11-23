@@ -72,13 +72,19 @@ func TestLiftMapArrayEntries(t *testing.T) {
 	}
 }
 
-func TestMapEntryMismatchPanics(t *testing.T) {
+func TestMapArrayEntryNeedsMatchingTypes(t *testing.T) {
+	mustPanic(t, "LowerMap", func() { LowerMap[[2]string](Map[string, uint32]{}) })
+	mustPanic(t, "LiftMap", func() { LiftMap[Map[string, uint32]]((*[2]string)(nil), 0) })
+}
+
+func mustPanic(t *testing.T, name string, f func()) {
+	t.Helper()
 	defer func() {
 		if recover() == nil {
-			t.Error("LowerMap with a mismatched entry type did not panic")
+			t.Errorf("%s with a [2]K entry for differing key and value types did not panic", name)
 		}
 	}()
-	LowerMap[uint8](Map[string, uint32]{})
+	f()
 }
 
 func TestToMap(t *testing.T) {
@@ -149,6 +155,32 @@ func roundTrip[K comparable, V any](t *testing.T, m Map[K, V], want string) {
 	}
 	if string(again) != want {
 		t.Errorf("round trip = %s; want %s", again, want)
+	}
+}
+
+func TestMapJSONRejectsNonCanonicalKeys(t *testing.T) {
+	for _, data := range []string{`{"0":"first","null":"last"}`, `{" 1":"x"}`, `{"1.0":"x"}`} {
+		var m Map[uint32, string]
+		if err := json.Unmarshal([]byte(data), &m); err == nil {
+			t.Errorf("Unmarshal(%s) into Map[uint32, string] returned nil error", data)
+		}
+	}
+	var b Map[bool, int]
+	if err := json.Unmarshal([]byte(`{"false":1,"null":2}`), &b); err == nil {
+		t.Error("Unmarshal with key null into Map[bool, int] returned nil error")
+	}
+	if err := json.Unmarshal([]byte(`{"false":1,"true":2}`), &b); err != nil {
+		t.Fatal(err)
+	}
+	if v, _ := b.Get(false); v != 1 || b.Len() != 2 {
+		t.Errorf("Get(false) = %d, Len() = %d; want 1, 2", v, b.Len())
+	}
+	var s Map[string, int]
+	if err := json.Unmarshal([]byte(`{"null":1}`), &s); err != nil {
+		t.Fatal(err)
+	}
+	if v, ok := s.Get("null"); !ok || v != 1 {
+		t.Errorf(`Get("null") = %d, %t; want 1, true`, v, ok)
 	}
 }
 
