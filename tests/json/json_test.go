@@ -8,7 +8,7 @@ import (
 	wallclock "tests/generated/wasi/clocks/v0.2.0/wall-clock"
 	"tests/generated/wasi/filesystem/v0.2.0/types"
 
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 )
 
 func TestJSON(t *testing.T) {

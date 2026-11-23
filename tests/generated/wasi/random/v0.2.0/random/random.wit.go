@@ -9,7 +9,7 @@
 package random
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 )
 
 // GetRandomBytes represents the imported function "get-random-bytes".

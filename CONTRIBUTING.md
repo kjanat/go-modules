@@ -29,9 +29,9 @@ The [testdata](./testdata) directory contains tests that validate the round-trip
 
 All changes to this project are required to pass the CI suite powered by GitHub Actions. Pull requests will automatically have checks performed and can only be merged once all tests are passing. CI checks currently include:
 
-* Code is formatted correctly (use `go fmt` locally to pass this).
-* Tests pass on Go and TinyGo.
-* Tests pass on Linux, macOS, and WebAssembly targets.
+- Code is formatted correctly (use `go fmt` locally to pass this).
+- Tests pass on Go and TinyGo.
+- Tests pass on Linux, macOS, and WebAssembly targets.
 
 ## License
 

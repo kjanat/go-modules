@@ -4,7 +4,7 @@
 package preopens
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 	"tests/generated/wasi/filesystem/v0.2.0/types"
 )
 

@@ -29,7 +29,7 @@
 package types
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 	wallclock "tests/generated/wasi/clocks/v0.2.0/wall-clock"
 	"tests/generated/wasi/io/v0.2.0/streams"
 )

@@ -3,7 +3,7 @@
 package ipnamelookup
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 	"unsafe"
 )
 

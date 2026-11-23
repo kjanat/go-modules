@@ -10,7 +10,7 @@
 package terminalinput
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 )
 
 // TerminalInput represents the imported resource "wasi:cli/terminal-input@0.2.0#terminal-input".

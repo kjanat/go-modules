@@ -19,7 +19,7 @@
 package wallclock
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 )
 
 // DateTime represents the record "wasi:clocks/wall-clock@0.2.0#datetime".

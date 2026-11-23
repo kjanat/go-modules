@@ -1,31 +1,31 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
-  "forkProcessing": "enabled",
-  "timezone": "Europe/Amsterdam",
-  "schedule": ["* * * * 1"],
-  "enabledManagers": ["cargo", "gomod", "github-actions"],
-  "packageRules": [
-    {
-      "description": "Follow Beepboop v1 without replacing the major tag with a digest",
-      "matchManagers": ["github-actions"],
-      "matchPackageNames": ["kjanat/beepboop", "kjanat/beepboop/**"],
-      "pinDigests": false
-    },
-    {
-      "description": "Test upstream wasm-tools releases individually",
-      "matchManagers": ["cargo"],
-      "matchPackageNames": ["wasm-tools"],
-      "rangeStrategy": "pin",
-      "automerge": false
-    },
-    {
-      "description": "Read go.bytecodealliance.org/cm versions from its cm/v* tags",
-      "matchDatasources": ["go"],
-      "matchPackageNames": ["go.bytecodealliance.org/cm"],
-      "overrideDatasource": "github-tags",
-      "overridePackageName": "bytecodealliance/go-modules",
-      "extractVersion": "^cm/(?<version>v\\d+\\.\\d+\\.\\d+)$"
-    }
-  ]
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": ["config:recommended"],
+	"forkProcessing": "enabled",
+	"timezone": "Europe/Amsterdam",
+	"schedule": ["* * * * 1"],
+	"enabledManagers": ["cargo", "gomod", "github-actions"],
+	"packageRules": [
+		{
+			"description": "Follow Beepboop v1 without replacing the major tag with a digest",
+			"matchManagers": ["github-actions"],
+			"matchPackageNames": ["kjanat/beepboop", "kjanat/beepboop/**"],
+			"pinDigests": false
+		},
+		{
+			"description": "Test upstream wasm-tools releases individually",
+			"matchManagers": ["cargo"],
+			"matchPackageNames": ["wasm-tools"],
+			"rangeStrategy": "pin",
+			"automerge": false
+		},
+		{
+			"description": "Read go.bytecodealliance.org/cm versions from its cm/v* tags",
+			"matchDatasources": ["go"],
+			"matchPackageNames": ["go.bytecodealliance.org/cm"],
+			"overrideDatasource": "github-tags",
+			"overridePackageName": "bytecodealliance/go-modules",
+			"extractVersion": "^cm/(?<version>v\\d+\\.\\d+\\.\\d+)$"
+		}
+	]
 }

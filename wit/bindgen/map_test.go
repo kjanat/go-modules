@@ -9,57 +9,50 @@ import (
 	"github.com/kjanat/go-modules/wit"
 )
 
-func TestGoChecksMapsInSelectedWorld(t *testing.T) {
-	const src = `package test:features;
+func TestGoMapBindings(t *testing.T) {
+	const src = `package test:maps;
 interface api {
-	echo: func(input: option<map<string, u32>>);
-}
-interface named {
 	type table = map<string, u32>;
-	get: func() -> table;
+	echo: func(input: table) -> table;
+	pairs: func(input: option<map<string, string>>);
 }
-world example { export api; }
-world tables { export named; }
-world simple { export echo: func(input: string) -> string; }
+world example {
+	import api;
+	export api;
+}
 `
 	res, err := wit.DecodeWIT(strings.NewReader(src))
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, tc := range []struct {
-		name string
-		opts []Option
-		want string
-	}{
-		{"first world", nil, `"(anonymous)" in world "example"`},
-		{"anonymous map", []Option{World("example")}, `"(anonymous)" in world "example"`},
-		{"named map", []Option{World("tables")}, `"table" in world "tables"`},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			pkgs, err := Go(res, tc.opts...)
-			if pkgs != nil || err == nil || !strings.Contains(err.Error(), "does not support WIT map types: "+tc.want) {
-				t.Fatalf("Go returned %v, %v; want no packages and a WIT map error for %s", pkgs, err, tc.want)
+	pkgs, err := Go(res, GeneratedBy("test"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var b strings.Builder
+	for _, pkg := range pkgs {
+		for _, file := range pkg.Files {
+			src, err := file.Bytes()
+			if err != nil {
+				t.Fatal(err)
 			}
-		})
+			b.Write(src)
+		}
 	}
-	pkgs, err := Go(res, World("simple"))
-	if len(pkgs) == 0 || err != nil {
-		t.Fatalf("Go returned %v, %v; want bindings for the map-free world", pkgs, err)
-	}
-}
-
-func TestGoWithoutWorldSkipsMapCheck(t *testing.T) {
-	const src = `package test:features;
-interface api {
-	type table = map<string, u32>;
-}
-`
-	res, err := wit.DecodeWIT(strings.NewReader(src))
-	if err != nil {
-		t.Fatal(err)
-	}
-	pkgs, err := Go(res)
-	if err != nil {
-		t.Fatalf("Go returned %v, %v; want no error without a world", pkgs, err)
+	generated := b.String()
+	for _, want := range []string{
+		`"github.com/kjanat/go-modules/cm"`,
+		"type Table cm.Map[string, uint32]",
+		"func Echo(input Table) (result Table)",
+		"input0, input1 := cm.LowerMap[cm.Tuple[string, uint32]](input)",
+		"func wasmimport_Echo(input0 *cm.Tuple[string, uint32], input1 uint32, result *Table)",
+		"input := cm.LiftMap[Table]((*cm.Tuple[string, uint32])(input0), (uint32)(input1))",
+		"func Pairs(input cm.Option[cm.Map[string, string]])",
+		"v1, v2 := cm.LowerMap[[2]string](*some)",
+		"cm.LiftMap[cm.Map[string, string]]((*[2]string)(f1), (uint32)(f2))",
+	} {
+		if !strings.Contains(generated, want) {
+			t.Errorf("generated Go is missing %q", want)
+		}
 	}
 }

@@ -3,7 +3,7 @@
 package types
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 )
 
 // This file contains wasmimport and wasmexport declarations for "wasi:filesystem@0.2.0".

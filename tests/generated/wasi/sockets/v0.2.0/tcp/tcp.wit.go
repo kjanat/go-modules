@@ -4,7 +4,7 @@
 package tcp
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 	monotonicclock "tests/generated/wasi/clocks/v0.2.0/monotonic-clock"
 	"tests/generated/wasi/io/v0.2.0/poll"
 	"tests/generated/wasi/io/v0.2.0/streams"

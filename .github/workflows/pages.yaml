@@ -4,8 +4,8 @@ on:
   push:
     branches: [master]
     paths:
-      - 'site/**'
-      - '.github/workflows/pages.yaml'
+      - "site/**"
+      - ".github/workflows/pages.yaml"
   workflow_dispatch:
 
 permissions:

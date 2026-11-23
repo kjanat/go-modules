@@ -3,7 +3,7 @@
 package insecure
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 )
 
 // This file contains wasmimport and wasmexport declarations for "wasi:random@0.2.0".

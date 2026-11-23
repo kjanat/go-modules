@@ -52,7 +52,7 @@ var Command = &cli.Command{
 			Value:    "",
 			OnlyOnce: true,
 			Config:   cli.StringConfig{TrimSpace: true},
-			Usage:    "import path for the Component Model utility package, e.g. go.bytecodealliance.org/cm",
+			Usage:    "import path for the Component Model utility package (default: github.com/kjanat/go-modules/cm)",
 		},
 		&cli.BoolFlag{
 			Name:  "versioned",

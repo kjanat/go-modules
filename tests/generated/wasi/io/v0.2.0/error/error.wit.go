@@ -4,7 +4,7 @@
 package ioerror
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 )
 
 // Error represents the imported resource "wasi:io/error@0.2.0#error".

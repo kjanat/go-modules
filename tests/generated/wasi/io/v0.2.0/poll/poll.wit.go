@@ -7,7 +7,7 @@
 package poll
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 )
 
 // Pollable represents the imported resource "wasi:io/poll@0.2.0#pollable".

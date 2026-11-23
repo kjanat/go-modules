@@ -10,7 +10,7 @@
 package streams
 
 import (
-	"go.bytecodealliance.org/cm"
+	"github.com/kjanat/go-modules/cm"
 	ioerror "tests/generated/wasi/io/v0.2.0/error"
 	"tests/generated/wasi/io/v0.2.0/poll"
 )
