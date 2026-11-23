@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- Read and print WIT map types. Go binding generation still rejects maps explicitly.
+- Read and print WIT map types. Go binding generation returns an error for a world that uses a map.
 
 ## [v0.10.0] — 2026-11-18
 
@@ -320,28 +320,28 @@ Initial version, supporting [TinyGo](https://tinygo.org/) + [WASI](https://wasi.
 - Because Go does not have a native tagged union type, pointers represented in `variant` and `result` types may not be visible to the garbage collector and may be freed while still in use.
 - Support for mainline [Go](https://go.dev/).
 
-[v0.10.0]: <https://github.com/kjanat/go-modules/compare/v0.9.3...v0.10.0>
-[v0.9.3]: <https://github.com/kjanat/go-modules/compare/v0.9.2...v0.9.3>
-[v0.9.2]: <https://github.com/kjanat/go-modules/compare/v0.9.1...v0.9.2>
-[v0.9.1]: <https://github.com/kjanat/go-modules/compare/v0.9.0...v0.9.1>
-[v0.9.0]: <https://github.com/kjanat/go-modules/compare/v0.8.0...v0.9.0>
-[v0.7.0]: <https://github.com/bytecodealliance/go-modules/compare/v0.6.2..v0.7.0>
-[v0.6.2]: <https://github.com/bytecodealliance/go-modules/compare/v0.6.1..v0.6.2>
-[v0.6.1]: <https://github.com/bytecodealliance/go-modules/compare/v0.6.0..v0.6.1>
-[v0.6.0]: <https://github.com/bytecodealliance/go-modules/compare/v0.5.0..v0.6.0>
-[v0.5.0]: <https://github.com/bytecodealliance/go-modules/compare/v0.4.1..v0.5.0>
-[v0.4.1]: <https://github.com/bytecodealliance/go-modules/compare/v0.4.0..v0.4.1>
-[v0.4.0]: <https://github.com/bytecodealliance/go-modules/compare/v0.3.1..v0.4.0>
-[v0.3.1]: <https://github.com/bytecodealliance/go-modules/compare/v0.3.0..v0.3.1>
-[v0.3.0]: <https://github.com/bytecodealliance/go-modules/compare/v0.2.4..v0.3.0>
-[v0.2.4]: <https://github.com/bytecodealliance/go-modules/compare/v0.2.3..v0.2.4>
-[v0.2.3]: <https://github.com/bytecodealliance/go-modules/compare/v0.2.2..v0.2.3>
-[v0.2.2]: <https://github.com/bytecodealliance/go-modules/compare/v0.2.1..v0.2.2>
-[v0.2.1]: <https://github.com/bytecodealliance/go-modules/compare/v0.2.0...v0.2.1>
-[v0.2.0]: <https://github.com/bytecodealliance/go-modules/compare/v0.1.5...v0.2.0>
-[v0.1.5]: <https://github.com/bytecodealliance/go-modules/compare/v0.1.4...v0.1.5>
-[v0.1.4]: <https://github.com/bytecodealliance/go-modules/compare/v0.1.3...v0.1.4>
-[v0.1.3]: <https://github.com/bytecodealliance/go-modules/compare/v0.1.2...v0.1.3>
-[v0.1.2]: <https://github.com/bytecodealliance/go-modules/compare/v0.1.1...v0.1.2>
-[v0.1.1]: <https://github.com/bytecodealliance/go-modules/compare/v0.1.0...v0.1.1>
-[v0.1.0]: <https://github.com/bytecodealliance/go-modules/tree/v0.1.0>
+[v0.10.0]: https://github.com/kjanat/go-modules/compare/v0.9.3...v0.10.0
+[v0.9.3]: https://github.com/kjanat/go-modules/compare/v0.9.2...v0.9.3
+[v0.9.2]: https://github.com/kjanat/go-modules/compare/v0.9.1...v0.9.2
+[v0.9.1]: https://github.com/kjanat/go-modules/compare/v0.9.0...v0.9.1
+[v0.9.0]: https://github.com/kjanat/go-modules/compare/v0.8.0...v0.9.0
+[v0.7.0]: https://github.com/bytecodealliance/go-modules/compare/v0.6.2..v0.7.0
+[v0.6.2]: https://github.com/bytecodealliance/go-modules/compare/v0.6.1..v0.6.2
+[v0.6.1]: https://github.com/bytecodealliance/go-modules/compare/v0.6.0..v0.6.1
+[v0.6.0]: https://github.com/bytecodealliance/go-modules/compare/v0.5.0..v0.6.0
+[v0.5.0]: https://github.com/bytecodealliance/go-modules/compare/v0.4.1..v0.5.0
+[v0.4.1]: https://github.com/bytecodealliance/go-modules/compare/v0.4.0..v0.4.1
+[v0.4.0]: https://github.com/bytecodealliance/go-modules/compare/v0.3.1..v0.4.0
+[v0.3.1]: https://github.com/bytecodealliance/go-modules/compare/v0.3.0..v0.3.1
+[v0.3.0]: https://github.com/bytecodealliance/go-modules/compare/v0.2.4..v0.3.0
+[v0.2.4]: https://github.com/bytecodealliance/go-modules/compare/v0.2.3..v0.2.4
+[v0.2.3]: https://github.com/bytecodealliance/go-modules/compare/v0.2.2..v0.2.3
+[v0.2.2]: https://github.com/bytecodealliance/go-modules/compare/v0.2.1..v0.2.2
+[v0.2.1]: https://github.com/bytecodealliance/go-modules/compare/v0.2.0...v0.2.1
+[v0.2.0]: https://github.com/bytecodealliance/go-modules/compare/v0.1.5...v0.2.0
+[v0.1.5]: https://github.com/bytecodealliance/go-modules/compare/v0.1.4...v0.1.5
+[v0.1.4]: https://github.com/bytecodealliance/go-modules/compare/v0.1.3...v0.1.4
+[v0.1.3]: https://github.com/bytecodealliance/go-modules/compare/v0.1.2...v0.1.3
+[v0.1.2]: https://github.com/bytecodealliance/go-modules/compare/v0.1.1...v0.1.2
+[v0.1.1]: https://github.com/bytecodealliance/go-modules/compare/v0.1.0...v0.1.1
+[v0.1.0]: https://github.com/bytecodealliance/go-modules/tree/v0.1.0
