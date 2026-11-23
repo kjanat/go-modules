@@ -123,6 +123,7 @@ func TestTypeSizeAndAlign(t *testing.T) {
 		{"option<f32>", &TypeDef{Kind: &Option{Type: F32{}}}, 8, 4},
 		{"variant", &TypeDef{Kind: &Variant{Cases: []Case{{Type: String{}}, {Type: F64{}}}}}, 16, 8},
 		{"record", &TypeDef{Kind: &Record{Fields: []Field{{Type: U16{}}, {Type: &TypeDef{Kind: &Result{OK: U64{}}}}, {Type: U8{}}}}}, 32, 8},
+		{"map<string, u64>", &TypeDef{Kind: &Map{Key: String{}, Value: U64{}}}, 8, 4},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -161,6 +162,7 @@ func TestTypeFlat(t *testing.T) {
 		{"option<f32>", &TypeDef{Kind: &Option{Type: F32{}}}, []Type{U32{}, F32{}}},
 		{"variant", &TypeDef{Kind: &Variant{Cases: []Case{{Type: String{}}, {Type: F64{}}}}}, []Type{U32{}, U64{}, U32{}}},
 		{"record", &TypeDef{Kind: &Record{Fields: []Field{{Type: U16{}}, {Type: &TypeDef{Kind: &Result{OK: U64{}}}}, {Type: U8{}}}}}, []Type{U32{}, U32{}, U64{}, U32{}}},
+		{"map<string, u64>", &TypeDef{Kind: &Map{Key: String{}, Value: U64{}}}, []Type{PointerTo(&TypeDef{Kind: &Tuple{Types: []Type{String{}, U64{}}}}), U32{}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
