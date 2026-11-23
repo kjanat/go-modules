@@ -21,9 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v5
-        with: { install_args: go }
+        with: { install_args: go rust, working_directory: internal/wasmtools }
       - name: Build guest from locked sources
-        run: make wasm-tools
+        run: mise run wasm-tools
       - name: Exercise candidate through the Go host and generator
         run: |
           go test -count=1 ./... ./cm/...

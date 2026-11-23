@@ -23,7 +23,7 @@ GOARCH=wasm GOOS=wasip1 tinygo test ./...
 tinygo test -target=wasip2 ./... # requires TinyGo 0.33.0 or later
 ```
 
-The [testdata](./testdata) directory contains tests that validate the round-trip parsing and re-serialization of WIT files back into WIT. To rebuild the test files, run `make golden`. This will reregenerate the JSON intermediate representation and the equivalent `*.golden.wit` files.
+The [testdata](./testdata) directory contains tests that validate the round-trip parsing and re-serialization of WIT files back into WIT. To rebuild the test files, run `mise run golden`. This will reregenerate the JSON intermediate representation and the equivalent `*.golden.wit` files.
 
 ## Continuous Integration
 

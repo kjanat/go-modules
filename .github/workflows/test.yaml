@@ -145,7 +145,7 @@ jobs:
         run: echo "$(go env GOROOT)/lib/wasm" >> "${GITHUB_PATH}"
 
       - name: Regenerate Go
-        run: make tests/generated
+        run: mise run generate
 
       - name: Verify repo is unchanged
         run: git diff --exit-code HEAD
