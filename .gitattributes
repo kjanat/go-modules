@@ -1,1 +1,2 @@
 *.wit text eol=lf
+internal/wasmtools/embedded-release text eol=lf

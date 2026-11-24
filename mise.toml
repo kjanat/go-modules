@@ -1,50 +1,92 @@
 #:tombi toml-version = "v1.1.0"
 
 [tasks]
-fmt                = { run = "kprint fmt", alias = ["f", "format"] }
-"fmt:check"        = { run = "kprint check", description = "List files kprint would reformat" }
-vet                = { run = "go vet ./... ./cm/... ./tests/...", description = "Vet every module" }
-test               = { run = "go test ./... ./cm/...", alias = ["t"], description = "Test the root and cm modules" }
-"test:tinygo"      = { run = "tinygo test ./... ./cm/...", description = "Test the root and cm modules with TinyGo" }
-"test:wasm"        = {
-  run         = [
-    'PATH="$(go env GOROOT)/lib/wasm:$PATH" GOOS=wasip1 GOARCH=wasm go test ./... ./cm/...',
-    "tinygo test -target=wasip1 ./... ./cm/...",
-    "tinygo test -target=wasip2 ./... ./cm/...",
-    "tinygo test -target=wasip2 ./tests/...",
-  ],
-  description = "Test on wasip1 with Go and TinyGo and on wasip2 with TinyGo"
+fmt                         = { run = "kprint fmt", alias = ["f", "format"] }
+"fmt:check"                 = { run = "kprint check", description = "List files kprint would reformat" }
+vet                         = { run = "go vet ./... ./cm/... ./tests/...", description = "Vet every module" }
+"test:go"                   = { run = "go test ./... ./cm/...", description = "Test the root and cm modules" }
+"test:go:race"              = { run = "go test -race -short ./... ./cm/...", description = "Run the short tests with the race detector" }
+"test:tinygo"               = { run = "tinygo test ./... ./cm/...", description = "Test the root and cm modules with TinyGo" }
+"test:go:wasip1"            = {
+  run         = 'PATH="$(go env GOROOT)/lib/wasm:$PATH" GOOS=wasip1 GOARCH=wasm go test ./... ./cm/...',
+  shell       = "bash -o errexit -c",
+  description = "Test the root and cm modules on wasip1 with Go"
 }
-"test:consumer"    = {
+"test:tinygo:wasip1"        = {
+  run         = "tinygo test -target=wasip1 ./... ./cm/...",
+  description = "Test the root and cm modules on wasip1 with TinyGo"
+}
+"test:tinygo:wasip2"        = {
+  run         = "tinygo test -target=wasip2 ./... ./cm/...",
+  description = "Test the root and cm modules on wasip2 with TinyGo"
+}
+"test:bindings:regenerated" = {
+  run         = [
+    { task = "generate" },
+    "tinygo test -target=wasip2 ./...",
+    "GOWORK=off tinygo test -target=wasip1 ./maps/...",
+    "mkdir -p ../generated && tinygo build -target=wasip1 -o ../generated/maps.wasm ./guest/maps",
+    "GOWORK=off GOOS=wasip1 GOARCH=wasm go build ./numeric/...",
+  ],
+  dir         = "tests",
+  shell       = "bash -o errexit -c",
+  description = "Test the generated bindings on WebAssembly and build the map guest and numeric bindings"
+}
+"test:wasm"                 = {
+  run         = [
+    { task = "test:go:wasip1" },
+    { task = "test:tinygo:wasip1" },
+    { task = "test:tinygo:wasip2" },
+    { task = "test:bindings:regenerated" },
+  ],
+  description = "Run every WebAssembly suite"
+}
+"test:bindings:standalone"  = {
   run         = "go test ./cm/... ./json/... ./maps/...",
   dir         = "tests",
   env         = { GOWORK = "off" },
   description = "Test generated bindings from the tests module without the workspace"
 }
-"test:all"         = {
-  run         = [{ task = "test" }, { task = "test:tinygo" }, { task = "test:wasm" }],
-  description = "Run every Go and TinyGo suite"
+"test:all"                  = {
+  alias       = ["test", "t"],
+  run         = [
+    { task = "test:go" },
+    { task = "test:go:race" },
+    { task = "test:go:wasip1" },
+    { task = "test:tinygo" },
+    { task = "test:tinygo:wasip1" },
+    { task = "test:tinygo:wasip2" },
+    { task = "test:bindings:standalone" },
+    { task = "test:bindings:regenerated" },
+    { task = "wasm-tools:verify-release" },
+  ],
+  description = "Run every test suite"
 }
-json               = {
+json                        = {
   run         = '''
 for f in $(find testdata -name '*.wit' ! -name '*.golden.*' | sort); do
   wasm-tools component wit -j --all-features "$f" > "$f.json" || exit 1
 done
 ''',
+  shell       = "bash -o errexit -c",
   description = "Regenerate testdata JSON with wasm-tools"
 }
-golden             = { run = [{ task = "json" }, "go test ./wit -update"], description = "Regenerate testdata JSON and golden WIT files" }
-generate           = {
+golden                      = {
+  run         = [{ task = "json" }, "go test ./wit -update"],
+  description = "Regenerate testdata JSON and golden WIT files"
+}
+generate                    = {
   run         = [{ task = "json" }, "go generate ./tests"],
   alias       = ["gen"],
+  shell       = "bash -o errexit -c",
   description = "Regenerate the Go bindings in tests"
 }
-"generate:bindgen" = {
+"generate:bindgen"          = {
   run         = [{ task = "clean" }, { task = "json" }, "go test ./wit/bindgen -write"],
   description = "Write Go bindings for every testdata fixture to ./generated"
 }
-clean              = { run = "rm -rf ./generated/*", description = "Remove ./generated" }
-wasm-tools         = {
+clean                       = { run = "rm -rf ./generated/*", shell = "bash -o errexit -c", description = "Remove ./generated" }
+wasm-tools                  = {
   run         = ["cargo run --locked"],
   description = "Rebuild the embedded wasm-tools guest from Cargo.lock",
   dir         = "internal/wasmtools",
@@ -56,12 +98,38 @@ wasm-tools         = {
     }
   }
 }
+"wasm-tools:version"        = {
+  run         = '''
+read -r name version rest <<< "$(go run ./internal/cmd/wasm-tools --version)"
+[[ $name == wasm-tools && $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+echo "$version"
+''',
+  shell       = "bash -o errexit -c",
+  description = "Print the wasm-tools version of the embedded guest"
+}
+"wasm-tools:verify-release" = {
+  run         = '''
+version=$(mise run --quiet wasm-tools:version)
+tag=$(< internal/wasmtools/embedded-release)
+[[ $tag == "wasm-tools/v$version-kjanat."* ]]
+dir=$(mktemp -d)
+trap 'rm -r "$dir"' EXIT
+gh release download "$tag" -p wasm-tools.wasm.gz --dir "$dir"
+cmp "$dir/wasm-tools.wasm.gz" internal/wasmtools/wasm-tools.wasm.gz
+''',
+  shell       = "bash -o errexit -c",
+  description = "Compare the embedded guest with its published release asset"
+}
 
 [tools]
 kprint     = "0.64.1"
 tinygo     = "0.44.0"
-wasm-tools = "{{ read_toml(path='internal/wasmtools/Cargo.toml')['target']['cfg(target_os = \"wasi\")']['dependencies']['wasm-tools']['version'] | trim_start(pat='=') }}"
+wasm-tools = "{{ read_file(path='internal/wasmtools/embedded-release') | trim | split(pat='/v') | last | split(pat='-') | first }}"
 wasmtime   = "51.0.0"
+
+[tools."github:WebAssembly/binaryen"]
+version        = "133"
+version_prefix = "version_"
 
 [tool_alias]
 kprint = "github:kjanat/kprint"
