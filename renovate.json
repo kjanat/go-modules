@@ -30,7 +30,7 @@
 			"description": "Update the guest Rust toolchain once a month",
 			"matchManagers": ["rust-toolchain"],
 			"schedule": ["* 0-3 1 * *"],
-			"automerge": true,
+			"automerge": false,
 			"addLabels": ["dependencies: toolchain"],
 			"minimumReleaseAge": "7 days"
 		}
