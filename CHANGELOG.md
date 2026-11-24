@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Added
 
 - Release `wit-bindgen-go` binaries for Windows arm64 and for FreeBSD amd64, 386, and arm64.
-- Each release carries `checksums.txt`, an SPDX SBOM, and build provenance and SBOM attestations for every file. Verify a download with `gh attestation verify <file> --repo kjanat/go-modules`.
+- Each release carries `checksums.txt` and an SPDX SBOM. Each binary has build provenance and SBOM attestations. Verify a binary with `gh attestation verify <file> --repo kjanat/go-modules`.
 
 ### Changed
 
