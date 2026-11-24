@@ -2,7 +2,7 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [v0.11.0] - 2026-11-24
 
 ### Added
 
@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Build the embedded wasm-tools guest with Rust nightly-2026-11-23 and cargo `trim-paths`. The guest contains no host file paths, and CI rebuilds it byte for byte.
 - Breaking: generated code imports `github.com/kjanat/go-modules/cm` by default. That module aliases every `go.bytecodealliance.org/cm` type, and values pass between both import paths unchanged. Run `go get github.com/kjanat/go-modules/cm` in modules that build generated code. A package selected with `--cm` or `CMPackage` must provide `Map`, `LowerMap`, and `LiftMap` to build bindings that use WIT maps.
 
 ## [v0.10.0] — 2026-11-18
@@ -325,6 +326,7 @@ Initial version, supporting [TinyGo](https://tinygo.org/) + [WASI](https://wasi.
 - Because Go does not have a native tagged union type, pointers represented in `variant` and `result` types may not be visible to the garbage collector and may be freed while still in use.
 - Support for mainline [Go](https://go.dev/).
 
+[v0.11.0]: https://github.com/kjanat/go-modules/compare/v0.10.0...v0.11.0
 [v0.10.0]: https://github.com/kjanat/go-modules/compare/v0.9.3...v0.10.0
 [v0.9.3]: https://github.com/kjanat/go-modules/compare/v0.9.2...v0.9.3
 [v0.9.2]: https://github.com/kjanat/go-modules/compare/v0.9.1...v0.9.2
