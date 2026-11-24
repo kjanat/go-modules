@@ -95,6 +95,8 @@ type generator struct {
 	res   *wit.Resolve
 	world *wit.World // optional, can be nil
 
+	mapABIs map[*gen.Package]*wasm32Generator
+
 	// versioned is set to true if there are multiple versions of a WIT package in res,
 	// which affects the generated Go package paths.
 	versioned bool
@@ -1648,7 +1650,13 @@ func (g *generator) goParams(scope gen.Scope, dir wit.Direction, params []wit.Pa
 
 func (g *generator) declareFunction(owner wit.TypeOwner, dir wit.Direction, f *wit.Function) (*funcDecl, error) {
 	file := g.fileFor(owner)
-	wasmFile := g.wasmFileFor(owner)
+	var wasmFile *gen.File
+	mapABI := usesMap(f)
+	if mapABI {
+		wasmFile = g.mapABIFile(file.Package, false)
+	} else {
+		wasmFile = g.wasmFileFor(owner)
+	}
 	var scope gen.Scope = file
 	wasm := f.CoreFunction(dir)
 	tdir := dir
@@ -1687,8 +1695,12 @@ func (g *generator) declareFunction(owner wit.TypeOwner, dir wit.Direction, f *w
 	}
 
 	if dir == wit.Imported {
-		g.ensureParamImports(file, tdir, f.Params)
-		g.ensureParamImports(file, tdir, f.Results)
+		importFile := file
+		if mapABI {
+			importFile = wasmFile
+		}
+		g.ensureParamImports(importFile, tdir, f.Params)
+		g.ensureParamImports(importFile, tdir, f.Results)
 	}
 
 	var funcName, wasmName string
@@ -1746,6 +1758,9 @@ func (g *generator) declareFunction(owner wit.TypeOwner, dir wit.Direction, f *w
 		wasmFunc:   g.goFunction(wasmFile, tdir, dir, wasm, wasmName),
 		linkerName: linkerName,
 	}
+	if mapABI && dir == wit.Imported {
+		fdecl.goFunc.file = wasmFile
+	}
 	g.functions[dir][f] = fdecl
 	return fdecl, nil
 }
@@ -1785,6 +1800,9 @@ func (g *generator) defineImportedFunction(decl *funcDecl) error {
 	dir := wit.Imported
 	if !g.define(dir, decl.f) {
 		return nil
+	}
+	if usesMap(decl.f) {
+		g.defineStandardMapFunction(decl)
 	}
 
 	file := decl.goFunc.file
@@ -1965,6 +1983,9 @@ func (g *generator) defineExportedFunction(decl *funcDecl) error {
 	dir := wit.Exported
 	if !g.define(dir, decl.f) {
 		return nil
+	}
+	if usesMap(decl.f) {
+		g.defineStandardMapFunction(decl)
 	}
 	file := decl.goFunc.file
 	scope := g.exportScopes[decl.owner]

@@ -26,11 +26,16 @@ vet                         = { run = "go vet ./... ./cm/... ./tests/...", descr
     "tinygo test -target=wasip2 ./...",
     "GOWORK=off tinygo test -target=wasip1 ./maps/...",
     "mkdir -p ../generated && tinygo build -target=wasip1 -o ../generated/maps.wasm ./guest/maps",
+    "GOWORK=off GOOS=wasip1 GOARCH=wasm go build -buildmode=c-shared -ldflags=-checklinkname=0 -o ../generated/maps-go.wasm ./guest/maps",
     "GOWORK=off GOOS=wasip1 GOARCH=wasm go build ./numeric/...",
   ],
   dir         = "tests",
   shell       = "bash -o errexit -c",
   description = "Test the generated bindings on WebAssembly and build the map guest and numeric bindings"
+}
+"test:maps:go"              = {
+  run         = "bash scripts/test-go-maps.bash",
+  description = "Round-trip generated standard Go map imports and exports in Wasmtime"
 }
 "test:wasm"                 = {
   run         = [

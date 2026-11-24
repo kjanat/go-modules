@@ -60,9 +60,17 @@ This will emit JSON on `stdout`, which can be piped to a file or another program
 wasm-tools component wit -j --all-features example.wit > example.wit.json
 ```
 
-## Standard Go on `wasip1`
+## WIT maps on standard Go and TinyGo
 
-TinyGo builds every generated map signature. Standard Go with `GOOS=wasip1 GOARCH=wasm` compiles a map parameter with numeric keys and values, such as `map<u32, u32>`. Its `go:wasmimport` and `go:wasmexport` checks reject a map parameter whose keys or values contain a string, list, or map, and every map result, which the generated code returns through a pointer.
+Generated bindings use `cm.Map` for map parameters and results, including maps in records, variants, and other maps. Standard Go bindings convert between Go values and the 32-bit Canonical ABI at the component boundary. TinyGo uses its native 32-bit Wasm layout.
+
+To build the core module for a standard Go component, use reactor mode and allow access to the runtime allocator during WASI initialization:
+
+```sh
+GOOS=wasip1 GOARCH=wasm go build -buildmode=c-shared -ldflags=-checklinkname=0 -o guest.wasm .
+```
+
+When wrapping the module with `wasm-tools component new`, use a WASI Preview 1 reactor adapter that exports `adapter_monotonic_clock_set_paused`, such as the one distributed with Wasmtime 51. Enable component map support when running it with Wasmtime. Run `mise run test:maps:go` to build and exercise both standard Go map imports and exports.
 
 ## Memory Safety and Garbage Collection
 
