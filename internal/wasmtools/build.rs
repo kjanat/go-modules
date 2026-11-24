@@ -54,26 +54,19 @@ fn main() {
             "-p",
             "wasm-tools",
         ])
+        .env("CARGO_ENCODED_RUSTFLAGS", "")
         .env("CARGO_TARGET_DIR", out.join("guest"));
-    let mut maps = vec![format!(
-        "--remap-path-prefix={}=/build",
-        env::var("CARGO_MANIFEST_DIR").unwrap()
-    )];
     for pkg in packages.iter().filter(|p| p["name"] == "wit-parser") {
         let version = pkg["version"].as_str().unwrap();
         let patch = PathBuf::from(format!("patches/wit-parser-{version}.patch"));
         let src = Path::new(pkg["manifest_path"].as_str().unwrap())
             .parent()
             .unwrap();
-        // Map Cargo's registry path out of panic locations in the shipped binary.
-        maps.push(format!(
-            "--remap-path-prefix={}=/registry",
-            src.parent().unwrap().display()
-        ));
         if !patch.exists() {
             continue;
         }
-        let local = out.join("wit-parser");
+        // Cargo hashes a path dependency by its workspace-relative path.
+        let local = Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("wit-parser-{version}"));
         if local.exists() {
             fs::remove_dir_all(&local).unwrap();
         }
@@ -86,7 +79,6 @@ fn main() {
         let paths = serde_json::json!([local]);
         build.args(["--config", &format!("paths={paths}")]);
     }
-    build.env("CARGO_ENCODED_RUSTFLAGS", maps.join("\x1f"));
     run(&mut build);
     let product = out
         .join("guest")
