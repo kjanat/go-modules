@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(dirname "$0")/../tests"
+tests_dir=$(cd "$(dirname "$0")/../tests" && pwd)
 scratch=$(mktemp -d)
 trap 'rm -rf -- "$scratch"' EXIT
 
@@ -14,7 +14,7 @@ if [[ -z "$adapter" ]]; then
 		--pattern wasi_snapshot_preview1.reactor.wasm --dir "$scratch"
 fi
 
-sed '/^  import maps;/d' ../testdata/codegen/maps.wit >"$scratch/maps.wit"
+sed '/^  import maps;/d' "$tests_dir/../testdata/codegen/maps.wit" >"$scratch/maps.wit"
 cat >>"$scratch/maps.wit" <<'WIT'
 world consumer {
   import maps;
@@ -24,7 +24,7 @@ WIT
 
 build_component() {
 	local world=$1 guest=$2
-	GOWORK=off GOOS=wasip1 GOARCH=wasm "$go_bin" build -ldflags=-checklinkname=0 \
+	GOWORK=off GOOS=wasip1 GOARCH=wasm "$go_bin" -C "$tests_dir" build -ldflags=-checklinkname=0 \
 		-buildmode=c-shared -o "$scratch/$guest.core.wasm" "./guest/maps-go/$guest"
 	wasm-tools component embed --world "$world" "$scratch/maps.wit" \
 		"$scratch/$guest.core.wasm" -o "$scratch/$guest.embedded.wasm"

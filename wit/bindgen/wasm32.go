@@ -90,7 +90,7 @@ func (g *generator) defineStandardMapFunction(decl *funcDecl) {
 		file := g.mapABIFile(pkg, true)
 		w = &wasm32Generator{
 			g: g, file: file,
-			wire:    file.Import(cmPackage + "/wasm32"),
+			wire:    file.Import(g.opts.cmPackage + "/wasm32"),
 			layouts: make(map[wit.Type]string),
 			codecs:  make(map[wireCodecKey]string),
 		}

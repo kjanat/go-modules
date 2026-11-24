@@ -3,9 +3,12 @@
 package main
 
 import (
-	"github.com/kjanat/go-modules/cm"
 	"runtime"
+	"slices"
+
 	"tests/maps/foo/foo/maps"
+
+	"github.com/kjanat/go-modules/cm"
 )
 
 //go:wasmexport check
@@ -17,9 +20,14 @@ func check() uint32 {
 		if s, _ := cfg.Labels.Get("l"); s != "longer string" {
 			panic(s)
 		}
-		lists := maps.VariantMap(maps.EntryTags(cm.ToMap(map[uint32]cm.List[string]{3: cm.ToList([]string{"nested", "string"})})))
-		items, _ := lists.Tags().Get(3)
-		if items.Slice()[1] != "string" {
+		wantItems := []string{"nested", "string"}
+		lists := maps.VariantMap(maps.EntryTags(cm.ToMap(map[uint32]cm.List[string]{3: cm.ToList(wantItems)})))
+		tags := lists.Tags()
+		if tags == nil {
+			panic("missing variant tags")
+		}
+		items, found := tags.Get(3)
+		if !found || !slices.Equal(items.Slice(), wantItems) {
 			panic("bad variant")
 		}
 		opt := maps.OptionMap(cm.Some(cm.ToMap(map[bool]string{true: "in"})))
@@ -36,7 +44,10 @@ func check() uint32 {
 			panic(n)
 		}
 		runtime.GC()
-		result, _ = cfg.Counts.Get("x")
+		result, found = cfg.Counts.Get("x")
+		if !found || result != i+23 {
+			panic("bad count after GC")
+		}
 	}
 	return result
 }
