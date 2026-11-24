@@ -16,172 +16,83 @@ permissions:
 
 env:
   GOTOOLCHAIN: local
-  go-modules: ./... ./cm/...
 
 jobs:
-  # Vet Go code
-  vet-go:
+  vet:
     name: Vet Go code
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 3
     steps:
-      - name: Checkout repo
+      - &checkout
+        name: Checkout repo
         uses: actions/checkout@v7
         with:
           submodules: recursive
 
-      - name: Set up Go
-        uses: jdx/mise-action@v5
+      - &mise
+        name: Set up mise
+        uses: kjanat/mise-action@v6
+
+      - &cache
+        name: Cache Go, TinyGo and wazero builds
+        uses: actions/cache@v6
         with:
-          install_args: go
+          path: |
+            ~/.cache/go-build
+            ~/.cache/tinygo
+            ~/AppData/Local/go-build
+            ~/AppData/Local/tinygo
+            ~/go/pkg/mod
+            ~/AppData/Local/Temp/github.com/kjanat/go-modules@*
+            /tmp/github.com/kjanat/go-modules@*
+          key: build-${{ runner.os }}-${{ github.job }}-${{ strategy.job-index }}-${{ hashFiles('**/go.sum', 'mise.toml', 'internal/wasmtools/wasm-tools.wasm.gz') }}
+          restore-keys: build-${{ runner.os }}-${{ github.job }}-${{ strategy.job-index }}-
 
       - name: Vet Go code
-        run: go vet ${{ env.go-modules }} ./tests/...
+        run: mise run vet
 
-  # Test with Go
-  test-go:
-    name: Test with Go
+  test:
+    name: ${{ matrix.task }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 5
     strategy:
+      fail-fast: true
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os:
+          - ubuntu-latest
+          - windows-latest
+        task:
+          - test:go
+          - test:go:race
+          - test:go:wasip1
+          - test:tinygo
+          - test:tinygo:wasip1
+          - test:tinygo:wasip2
+          - test:bindings:standalone
+          - test:bindings:regenerated
+          - wasm-tools:verify-release
+        exclude:
+          # Go runs wasip1 tests through go_wasip1_wasm_exec, a bash script that mounts the host root into the guest.
+          - os: windows-latest
+            task: test:go:wasip1
+          # TinyGo passes Windows host paths as the guest's PWD and preopens, which WASI resolves as relative names.
+          - os: windows-latest
+            task: test:tinygo:wasip1
+          - os: windows-latest
+            task: test:tinygo:wasip2
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v7
-        with:
-          submodules: recursive
+      - *checkout
 
-      - name: Set up Go
-        uses: jdx/mise-action@v5
-        with:
-          install_args: go
+      - *mise
 
-      - name: Run Go tests
-        run: go test -v ${{ env.go-modules }}
+      - *cache
 
-      - name: Run Go tests with race detector
-        run: go test -v -race ${{ env.go-modules }}
-
-      - name: Test Go without cgo
-        env:
-          CGO_ENABLED: 0
-        run: go test -v ${{ env.go-modules }}
-
-      - name: Test generated map bindings from a consumer module
-        working-directory: tests
-        env:
-          GOWORK: "off"
-        run: go test -v ./cm/... ./json/... ./maps/...
-
-      - name: Verify repo is unchanged
-        run: git diff --exit-code HEAD
-
-  # Test with TinyGo
-  test-tinygo:
-    name: Test with TinyGo
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v7
-        with:
-          submodules: recursive
-
-      - name: Set up Go and TinyGo
-        uses: jdx/mise-action@v5
-        with:
-          install_args: go tinygo
-
-      - name: Test with TinyGo
-        run: tinygo test -v ${{ env.go-modules }}
-
-      - name: Verify repo is unchanged
-        run: git diff --exit-code HEAD
-
-  # Test with WebAssembly
-  test-wasm:
-    name: Test with WebAssembly
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v7
-        with:
-          submodules: recursive
-
-      - name: Set up Go, TinyGo and Wasmtime
-        uses: jdx/mise-action@v5
-        with:
-          install_args: go tinygo wasmtime
-
-      - name: Read the shipped CLI version
-        id: guest
-        run: |
-          read -r name version rest <<< "$(go run ./internal/cmd/wasm-tools --version)"
-          [[ $name == wasm-tools && $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-
-      - name: Verify the embedded guest against its published asset
-        if: hashFiles('internal/wasmtools/embedded-release') != ''
+      - name: Run ${{ matrix.task }}
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.guest.outputs.version }}
-        run: |
-          tag=$(cat internal/wasmtools/embedded-release)
-          [[ $tag == "wasm-tools/v$VERSION-kjanat."* ]]
-          gh release download "$tag" -p wasm-tools.wasm.gz --dir "$RUNNER_TEMP/release"
-          cmp "$RUNNER_TEMP/release/wasm-tools.wasm.gz" internal/wasmtools/wasm-tools.wasm.gz
-
-      # TinyGo needs the matching native CLI for -target=wasip2.
-      - name: Set up wasm-tools
-        env:
-          MISE_WASM_TOOLS_VERSION: ${{ steps.guest.outputs.version }}
-        run: |
-          mise install wasm-tools
-          echo "MISE_WASM_TOOLS_VERSION=$MISE_WASM_TOOLS_VERSION" >> "$GITHUB_ENV"
-
-      - name: Add Go wasm exec to $PATH
-        run: echo "$(go env GOROOT)/lib/wasm" >> "${GITHUB_PATH}"
-
-      - name: Regenerate Go
-        run: mise run generate
-
-      - name: Verify repo is unchanged
-        run: git diff --exit-code HEAD
-
-      - name: Test wasm/wasip1 with Go
-        env:
-          GOARCH: wasm
-          GOOS: wasip1
-        run: go test -v ${{ env.go-modules }}
-
-      - name: Test wasm/wasip1 with TinyGo
-        run: tinygo test -v -target=wasip1 ${{ env.go-modules }}
-
-      - name: Test wasm/wasip2 with TinyGo
-        run: tinygo test -v -target=wasip2 ${{ env.go-modules }}
-
-      - name: Test generated Go with TinyGo
-        run: tinygo test -v -target wasip2 ./tests/...
-
-      - name: Test generated map bindings with TinyGo from a consumer module
-        working-directory: tests
-        env:
-          GOWORK: "off"
-        run: tinygo test -v -target=wasip1 ./maps/...
-
-      - name: Build the map fixture guest with TinyGo
-        working-directory: tests
-        run: tinygo build -target=wasip1 -o "$RUNNER_TEMP/maps.wasm" ./guest/maps
-
-      - name: Compile numeric map input bindings with Go
-        working-directory: tests
-        env:
-          GOARCH: wasm
-          GOOS: wasip1
-          GOWORK: "off"
-        run: go build ./numeric/...
+          TASK: ${{ matrix.task }}
+        run: mise run $env:TASK
 
       - name: Verify repo is unchanged
         run: git diff --exit-code HEAD
