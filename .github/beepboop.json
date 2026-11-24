@@ -9,17 +9,6 @@
         "kind": "tags",
         "prefix": "v"
       },
-      "workflows": {
-        "release": {
-          "file": "release.yaml",
-          "mode": "observe",
-          "ref": "refs/tags/v*",
-          "publications": [
-            "pkg:golang/github.com/kjanat/go-modules",
-            "pkg:github/kjanat/go-modules"
-          ]
-        }
-      },
       "packageTags": ["pkg:golang/github.com/kjanat/go-modules"],
       "promote": {
         "publishWhen": "version-pr-merged",
@@ -53,10 +42,46 @@
           },
           "file": "publish.yaml",
           "ref": "master",
-          "publications": ["github-release:kjanat/go-modules"],
+          "publications": [
+            "pkg:golang/github.com/kjanat/go-modules",
+            "github-release:kjanat/go-modules"
+          ],
           "refs": {
             "phase": "version",
             "prefix": "v"
+          }
+        }
+      },
+      "startFrom": [
+        {
+          "via": "action",
+          "workflow": "start-release.yml"
+        }
+      ]
+    },
+    "cm": {
+      "packages": ["pkg:golang/github.com/kjanat/go-modules/cm"],
+      "versionScope": "one-for-stream",
+      "mustPublish": ["pkg:golang/github.com/kjanat/go-modules/cm"],
+      "versionSource": {
+        "kind": "tags",
+        "prefix": "cm/v"
+      },
+      "promote": {
+        "publishWhen": "version-pr-merged",
+        "workflow": {
+          "setup": {
+            "job": "publish",
+            "existingTriggers": "replace-with-dispatch",
+            "commands": "beepboop publish",
+            "tagPrefix": "cm/v"
+          },
+          "file": "publish-cm.yaml",
+          "ref": "master",
+          "publications": ["pkg:golang/github.com/kjanat/go-modules/cm"],
+          "refs": {
+            "phase": "version",
+            "prefix": "cm/v"
           }
         }
       },
