@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/urfave/cli/v3"
 
@@ -26,7 +27,7 @@ var Command = &cli.Command{
 	Commands: []*cli.Command{
 		generate.Command,
 		wit.Command,
-		version,
+		versionCommand,
 	},
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
@@ -55,16 +56,26 @@ var Command = &cli.Command{
 
 func action(ctx context.Context, cmd *cli.Command) error {
 	if cmd.Bool("version") {
-		return version.Run(ctx, nil)
+		return versionCommand.Run(ctx, nil)
 	}
 	return cli.ShowAppHelp(cmd)
 }
 
-var version = &cli.Command{
+// version is set by release builds with -ldflags "-X main.version=<version>".
+var version string
+
+func versionText() string {
+	if version == "" {
+		return module.Version()
+	}
+	return "v" + strings.TrimPrefix(version, "v")
+}
+
+var versionCommand = &cli.Command{
 	Name:  "version",
 	Usage: "print the version",
 	Action: func(ctx context.Context, cmd *cli.Command) error {
-		fmt.Fprintf(cmd.Writer, "%s version %s\n", cmd.Root().Name, module.Version())
+		fmt.Fprintf(cmd.Writer, "%s version %s\n", cmd.Root().Name, versionText())
 		return nil
 	},
 }

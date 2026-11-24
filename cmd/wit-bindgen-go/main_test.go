@@ -8,6 +8,8 @@ import (
 	"context"
 	"strings"
 	"testing"
+
+	"github.com/kjanat/go-modules/internal/module"
 )
 
 // TestSimpleGenVerbosity ensures that a basic generation case honors the verbose flag
@@ -53,5 +55,20 @@ func TestSimpleGenVerbosity(t *testing.T) {
 	cmd.Run(context.Background(), append(args, "--verbose"))
 	if stderr.Len() == 0 {
 		t.Errorf("no output was written to stderr when --verbose was used")
+	}
+}
+
+func TestVersionText(t *testing.T) {
+	saved := version
+	t.Cleanup(func() { version = saved })
+	for _, tt := range []struct{ set, want string }{
+		{"", module.Version()},
+		{"0.11.1", "v0.11.1"},
+		{"v0.11.1", "v0.11.1"},
+	} {
+		version = tt.set
+		if got := versionText(); got != tt.want {
+			t.Errorf("version=%q: got %q, want %q", tt.set, got, tt.want)
+		}
 	}
 }
