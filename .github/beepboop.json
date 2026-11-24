@@ -19,8 +19,54 @@
             "pkg:github/kjanat/go-modules"
           ]
         }
-      }
+      },
+      "packageTags": ["pkg:golang/github.com/kjanat/go-modules"],
+      "promote": {
+        "publishWhen": "version-pr-merged",
+        "workflow": {
+          "setup": {
+            "job": "publish",
+            "existingTriggers": "replace-with-dispatch",
+            "commands": "beepboop publish",
+            "binaries": {
+              "builds": [
+                {
+                  "toolchain": "go",
+                  "name": "wit-bindgen-go",
+                  "module": ".",
+                  "package": "./cmd/wit-bindgen-go",
+                  "asset": "{name}-{go.os}-{go.arch}{ext}"
+                }
+              ],
+              "targets": [
+                "linux-amd64",
+                "linux-arm64",
+                "darwin-amd64",
+                "darwin-arm64",
+                "windows-amd64",
+                "windows-arm64",
+                "freebsd-amd64",
+                "freebsd-386",
+                "freebsd-arm64"
+              ]
+            }
+          },
+          "file": "publish.yaml",
+          "ref": "master",
+          "publications": ["github-release:kjanat/go-modules"],
+          "refs": {
+            "phase": "version",
+            "prefix": "v"
+          }
+        }
+      },
+      "startFrom": [
+        {
+          "via": "action",
+          "workflow": "start-release.yml"
+        }
+      ]
     }
   },
-  "managers": ["go", "workflow"]
+  "managers": ["github-release", "go", "workflow"]
 }
