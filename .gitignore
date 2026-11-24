@@ -4,3 +4,5 @@
 go.work.sum
 .wit-load-paths-*/
 /internal/wasmtools/wit-parser-*/
+/wit-bindgen-go
+/build/
