@@ -31,7 +31,8 @@
 			"matchManagers": ["rust-toolchain"],
 			"schedule": ["* 0-3 1 * *"],
 			"automerge": true,
-			"addLabels": ["dependencies: toolchain"]
+			"addLabels": ["dependencies: toolchain"],
+			"minimumReleaseAge": "7 days"
 		}
 	],
 	"addLabels": ["dependencies"],
