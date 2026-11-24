@@ -33,7 +33,7 @@ jobs:
         run: go test ./... ./cm/...
 
       - name: Build binary
-        env: { "${{ insert }}": "${{ fromjson(matrix) }}" }
+        env: { "${{ insert }}": "${{ matrix }}" }
         run: |
           mkdir -p build
           go build -o wit-bindgen-go ./cmd/wit-bindgen-go
