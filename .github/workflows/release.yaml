@@ -36,8 +36,9 @@ jobs:
         env: { "${{ insert }}": "${{ matrix }}" }
         run: |
           mkdir -p build
-          go build -o wit-bindgen-go ./cmd/wit-bindgen-go
-          tar -czf "build/wit-bindgen-go-${GOOS}-${GOARCH}.tgz" wit-bindgen-go
+          go build -trimpath -o wit-bindgen-go ./cmd/wit-bindgen-go
+          tar --format=gnu --owner=0 --group=0 --numeric-owner --mode=0755 --mtime="$(git log -1 --format=%cI)" \
+            -czf "build/wit-bindgen-go-${GOOS}-${GOARCH}.tgz" wit-bindgen-go
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -51,6 +52,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      attestations: write
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -63,6 +65,11 @@ jobs:
         with:
           path: build/
           merge-multiple: true # all artifacts are downloaded to this directory
+
+      - name: Attest binaries
+        uses: actions/attest@v4
+        with:
+          subject-path: build/*.tgz
 
       - name: Extract release notes
         run: ./scripts/extract-changelog.sh "${GITHUB_REF_NAME}" > RELEASE_NOTES.md
