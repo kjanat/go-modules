@@ -1,0 +1,66 @@
+name: Attest v0.11.0
+
+on:
+  push:
+    branches:
+      - ci/attest-release
+    paths:
+      - .github/workflows/attest-v0.11.0.yaml
+
+permissions:
+  contents: read
+
+jobs:
+  attest:
+    name: Rebuild and attest v0.11.0 binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      CGO_ENABLED: "0"
+      GOTOOLCHAIN: local
+      TAG: v0.11.0
+    steps:
+      - name: Checkout v0.11.0
+        uses: actions/checkout@v7
+        with:
+          ref: refs/tags/v0.11.0
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: kjanat/mise-action@v6
+
+      - name: Download published binaries
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: gh release download "${TAG}" --repo "${GITHUB_REPOSITORY}" --pattern '*.tgz' --dir "${RUNNER_TEMP}/published"
+
+      - name: Rebuild binaries
+        run: |
+          git status --short
+          go version
+          mkdir -p "${RUNNER_TEMP}/rebuilt"
+          for target in linux/amd64 linux/arm64 windows/amd64 darwin/amd64 darwin/arm64; do
+            asset="wit-bindgen-go-${target%/*}-${target#*/}.tgz"
+            mtime="$(tar --list --verbose --full-time --gzip --file "${RUNNER_TEMP}/published/${asset}" | awk '{print $4" "$5}')"
+            GOOS="${target%/*}" GOARCH="${target#*/}" go build -trimpath -o wit-bindgen-go ./cmd/wit-bindgen-go
+            go version -m wit-bindgen-go | grep -e 'mod' -e 'vcs'
+            touch --date="${mtime}" wit-bindgen-go
+            tar --format=gnu --owner=kjanat:1000 --group=kjanat:1000 --mode=0755 --create --gzip \
+              --file "${RUNNER_TEMP}/rebuilt/${asset}" wit-bindgen-go
+          done
+
+      - name: Compare with published binaries
+        working-directory: ${{ runner.temp }}
+        run: |
+          (cd published && sha256sum -- *.tgz) > published.sha256
+          (cd rebuilt && sha256sum -- *.tgz)
+          (cd rebuilt && sha256sum --check --strict ../published.sha256)
+
+      - name: Attest binaries
+        uses: actions/attest@v4
+        with:
+          subject-path: ${{ runner.temp }}/rebuilt/*.tgz
