@@ -5,7 +5,14 @@ package maps
 import (
 	"github.com/kjanat/go-modules/cm"
 	"strconv"
+	"unsafe"
 )
+
+// TupleU64U64U64Shape is used for storage in variant or result types.
+type TupleU64U64U64Shape struct {
+	_     cm.HostLayout
+	shape [unsafe.Sizeof([3]uint64{})]byte
+}
 
 func lower_OptionMapBoolString(v cm.Option[cm.Map[bool, string]]) (f0 uint32, f1 *cm.Tuple[bool, string], f2 uint32) {
 	some := v.Some()
@@ -18,19 +25,46 @@ func lower_OptionMapBoolString(v cm.Option[cm.Map[bool, string]]) (f0 uint32, f1
 	return
 }
 
+func lower_TupleU64U64U64(v [3]uint64) (f0 uint64, f1 uint64, f2 uint64) {
+	f0 = (uint64)(v[0])
+	f1 = (uint64)(v[1])
+	f2 = (uint64)(v[2])
+	return
+}
+
+func lower_MixedResult(v MixedResult) (f0 uint32, f1 uint64, f2 uint64, f3 uint64) {
+	if v.IsOK() {
+		v1, v2, v3 := lower_TupleU64U64U64(*v.OK())
+		f1 = (uint64)(v1)
+		f2 = (uint64)(v2)
+		f3 = (uint64)(v3)
+	} else {
+		f0 = 1
+		v1, v2 := cm.LowerMap[cm.Tuple[int32, string]](*v.Err())
+		f1 = (uint64)(cm.PointerToU64(v1))
+		f2 = (uint64)(v2)
+	}
+	return
+}
+
 func lower_Config(v Config) (f0 *[2]string, f1 uint32, f2 *cm.Tuple[string, uint32], f3 uint32) {
 	f0, f1 = cm.LowerMap[[2]string](v.Labels)
 	f2, f3 = cm.LowerMap[cm.Tuple[string, uint32]](v.Counts)
 	return
 }
 
-func lower_Entry(v Entry) (f0 uint32, f1 *cm.Tuple[uint32, cm.List[string]], f2 uint32) {
+func lower_Entry(v Entry) (f0 uint32, f1 uint64, f2 uint64, f3 uint64) {
 	f0 = (uint32)(v.Tag())
 	switch f0 {
 	case 1: // tags
-		v1, v2 := cm.LowerMap[cm.Tuple[uint32, cm.List[string]]](*cm.Case[cm.Map[uint32, cm.List[string]]](&v, 1))
-		f1 = (*cm.Tuple[uint32, cm.List[string]])(v1)
-		f2 = (uint32)(v2)
+		v1, v2 := cm.LowerMap[cm.Tuple[uint32, cm.List[string]]](*v.Tags())
+		f1 = (uint64)(cm.PointerToU64(v1))
+		f2 = (uint64)(v2)
+	case 2: // wide
+		v1, v2, v3 := lower_TupleU64U64U64(*v.Wide())
+		f1 = (uint64)(v1)
+		f2 = (uint64)(v2)
+		f3 = (uint64)(v3)
 	}
 	return
 }
@@ -42,18 +76,41 @@ func lift_OptionMapBoolString(f0 uint32, f1 *cm.Tuple[bool, string], f2 uint32) 
 	return (cm.Option[cm.Map[bool, string]])(cm.Some[cm.Map[bool, string]](cm.LiftMap[cm.Map[bool, string]]((*cm.Tuple[bool, string])(f1), (uint32)(f2))))
 }
 
+func lift_TupleU64U64U64(f0 uint64, f1 uint64, f2 uint64) (v [3]uint64) {
+	v[0] = (uint64)(f0)
+	v[1] = (uint64)(f1)
+	v[2] = (uint64)(f2)
+	return
+}
+
+func lift_MixedResult(f0 uint32, f1 uint64, f2 uint64, f3 uint64) (v MixedResult) {
+	switch f0 {
+	case 0:
+		var result MixedResult
+		result.SetOK(lift_TupleU64U64U64((uint64)(f1), (uint64)(f2), (uint64)(f3)))
+		return result
+	case 1:
+		var result MixedResult
+		result.SetErr(cm.LiftMap[cm.Map[int32, string]](cm.U64ToPointer[cm.Tuple[int32, string]](f1), (uint32)(f2)))
+		return result
+	}
+	panic("lift result: unknown case: " + strconv.Itoa(int(f0)))
+}
+
 func lift_Config(f0 *[2]string, f1 uint32, f2 *cm.Tuple[string, uint32], f3 uint32) (v Config) {
 	v.Labels = cm.LiftMap[cm.Map[string, string]](f0, f1)
 	v.Counts = cm.LiftMap[Names](f2, f3)
 	return
 }
 
-func lift_Entry(f0 uint32, f1 *cm.Tuple[uint32, cm.List[string]], f2 uint32) (v Entry) {
+func lift_Entry(f0 uint32, f1 uint64, f2 uint64, f3 uint64) (v Entry) {
 	switch f0 {
 	case 0:
-		return cm.New[Entry](0, struct{}{})
+		return EntryEmpty()
 	case 1:
-		return cm.New[Entry](1, cm.LiftMap[cm.Map[uint32, cm.List[string]]]((*cm.Tuple[uint32, cm.List[string]])(f1), (uint32)(f2)))
+		return EntryTags(cm.LiftMap[cm.Map[uint32, cm.List[string]]](cm.U64ToPointer[cm.Tuple[uint32, cm.List[string]]](f1), (uint32)(f2)))
+	case 2:
+		return EntryWide(lift_TupleU64U64U64((uint64)(f1), (uint64)(f2), (uint64)(f3)))
 	}
 	panic("lift variant: unknown case: " + strconv.Itoa(int(f0)))
 }

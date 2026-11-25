@@ -97,6 +97,7 @@ func (w *wasm32Generator) codec(dir wit.Direction, t wit.Type) string {
 			break
 		}
 		cases := k.Despecialize().(*wit.Variant)
+		mapResult := containsMap(t)
 		fmt.Fprintf(&load, "switch %s.Load[uint8](addr) {\n", w.wire)
 		store.WriteString("if v.IsOK() {\n")
 		for i, t := range []wit.Type{k.OK, k.Err} {
@@ -109,7 +110,11 @@ func (w *wasm32Generator) codec(dir wit.Direction, t wit.Type) string {
 				expr = fmt.Sprintf("%sLoad(addr+%d)", p, offset)
 				fmt.Fprintf(&store, "%sStore(a, addr+%d, *v.%s())\n", p, offset, method)
 			}
-			fmt.Fprintf(&load, "case %d: return %s.%s[%s](%s)\n", i, cmName(), method, rep, expr)
+			if mapResult {
+				fmt.Fprintf(&load, "case %d:\nv.Set%s(%s)\nreturn v\n", i, method, expr)
+			} else {
+				fmt.Fprintf(&load, "case %d: return %s.%s[%s](%s)\n", i, cmName(), method, rep, expr)
+			}
 			if i == 0 {
 				store.WriteString("} else {\n")
 			}
@@ -122,6 +127,10 @@ func (w *wasm32Generator) codec(dir wit.Direction, t wit.Type) string {
 			break
 		}
 		tag := w.g.typeRep(w.file, dir, wit.Discriminant(len(k.Cases)))
+		var decl *typeDecl
+		if containsMap(t) {
+			decl = w.g.variantNames(dir, t.(*wit.TypeDef).Root())
+		}
 		fmt.Fprintf(&load, "switch %s.Load[%s](addr) {\n", w.wire, tag)
 		fmt.Fprintf(&store, "tag := v.Tag()\n%s.Store(addr, tag)\nswitch tag {\n", w.wire)
 		for i, c := range k.Cases {
@@ -130,9 +139,22 @@ func (w *wasm32Generator) codec(dir wit.Direction, t wit.Type) string {
 				payload := w.codec(dir, c.Type)
 				offset := payloadOffset(k)
 				expr = fmt.Sprintf("%sLoad(addr+%d)", payload, offset)
-				fmt.Fprintf(&store, "case %d: %sStore(a, addr+%d, *%s.Case[%s](&v, %d))\n", i, payload, offset, cmName(), w.g.typeRep(w.file, dir, c.Type), i)
+				var getter string
+				if decl != nil {
+					getter = "v." + decl.variantCases[i].getter + "()"
+				} else {
+					getter = fmt.Sprintf("%s.Case[%s](&v, %d)", cmName(), w.g.typeRep(w.file, dir, c.Type), i)
+				}
+				fmt.Fprintf(&store, "case %d: %sStore(a, addr+%d, *%s)\n", i, payload, offset, getter)
 			}
-			fmt.Fprintf(&load, "case %d: return %s.New[%s](%s(%d), %s)\n", i, cmName(), rep, tag, i, expr)
+			if decl != nil {
+				if c.Type == nil {
+					expr = ""
+				}
+				fmt.Fprintf(&load, "case %d: return %s(%s)\n", i, w.file.RelativeName(decl.file.Package, decl.variantCases[i].constructor), expr)
+			} else {
+				fmt.Fprintf(&load, "case %d: return %s.New[%s](%s(%d), %s)\n", i, cmName(), rep, tag, i, expr)
+			}
 		}
 		load.WriteString("}\npanic(\"invalid canonical variant tag\")\n")
 		store.WriteString("}\n")

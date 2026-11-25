@@ -8,6 +8,57 @@ import (
 	"github.com/kjanat/go-modules/cm"
 )
 
+// Entry represents the variant "foo:foo/maps#entry".
+//
+//	variant entry {
+//		empty,
+//		tags(map<u32, list<string>>),
+//		wide(tuple<u64, u64, u64>),
+//	}
+type Entry cm.Variant[uint8, TupleU64U64U64Shape, [3]uint64]
+
+// EntryEmpty returns a [Entry] of case "empty".
+func EntryEmpty() Entry {
+	var data struct{}
+	return cm.New[Entry](0, data)
+}
+
+// Empty returns true if [Entry] represents the variant case "empty".
+func (self *Entry) Empty() bool {
+	return self.Tag() == 0
+}
+
+// EntryTags returns a [Entry] of case "tags".
+func EntryTags(data cm.Map[uint32, cm.List[string]]) Entry {
+	return cm.New[Entry](1, data)
+}
+
+// Tags returns a non-nil *[cm.Map[uint32, cm.List[string]]] if [Entry] represents the variant case "tags".
+func (self *Entry) Tags() *cm.Map[uint32, cm.List[string]] {
+	return cm.Case[cm.Map[uint32, cm.List[string]]](self, 1)
+}
+
+// EntryWide returns a [Entry] of case "wide".
+func EntryWide(data [3]uint64) Entry {
+	return cm.New[Entry](2, data)
+}
+
+// Wide returns a non-nil *[[3]uint64] if [Entry] represents the variant case "wide".
+func (self *Entry) Wide() *[3]uint64 {
+	return cm.Case[[3]uint64](self, 2)
+}
+
+var _EntryStrings = [3]string{
+	"empty",
+	"tags",
+	"wide",
+}
+
+// String implements [fmt.Stringer], returning the variant case name of v.
+func (v Entry) String() string {
+	return _EntryStrings[v.Tag()]
+}
+
 //go:wasmimport foo:foo/maps named-roundtrip
 //go:noescape
 func wasmimport_NamedRoundtrip(x0 *cm.Tuple[string, uint32], x1 uint32, result *Names)
@@ -99,15 +150,30 @@ func OptionMap(x cm.Option[cm.Map[bool, string]]) (result cm.Option[cm.Map[uint1
 
 //go:wasmimport foo:foo/maps result-map
 //go:noescape
-func wasmimport_ResultMap(result *cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]])
+func wasmimport_ResultMap(result *cm.MapResult[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]])
 
 // ResultMap represents the imported function "result-map".
 //
 //	result-map: func() -> result<map<s16, u8>, map<s32, string>>
 //
 //go:nosplit
-func ResultMap() (result cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
+func ResultMap() (result cm.MapResult[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
 	wasmimport_ResultMap(&result)
+	return
+}
+
+//go:wasmimport foo:foo/maps mixed-result-roundtrip
+//go:noescape
+func wasmimport_MixedResultRoundtrip(x0 uint32, x1 uint64, x2 uint64, x3 uint64, result *MixedResult)
+
+// MixedResultRoundtrip represents the imported function "mixed-result-roundtrip".
+//
+//	mixed-result-roundtrip: func(x: mixed-result) -> mixed-result
+//
+//go:nosplit
+func MixedResultRoundtrip(x MixedResult) (result MixedResult) {
+	x0, x1, x2, x3 := lower_MixedResult(x)
+	wasmimport_MixedResultRoundtrip((uint32)(x0), (uint64)(x1), (uint64)(x2), (uint64)(x3), &result)
 	return
 }
 
@@ -128,7 +194,7 @@ func RecordMap(x Config) (result Config) {
 
 //go:wasmimport foo:foo/maps variant-map
 //go:noescape
-func wasmimport_VariantMap(x0 uint32, x1 *cm.Tuple[uint32, cm.List[string]], x2 uint32, result *Entry)
+func wasmimport_VariantMap(x0 uint32, x1 uint64, x2 uint64, x3 uint64, result *Entry)
 
 // VariantMap represents the imported function "variant-map".
 //
@@ -136,8 +202,8 @@ func wasmimport_VariantMap(x0 uint32, x1 *cm.Tuple[uint32, cm.List[string]], x2 
 //
 //go:nosplit
 func VariantMap(x Entry) (result Entry) {
-	x0, x1, x2 := lower_Entry(x)
-	wasmimport_VariantMap((uint32)(x0), (*cm.Tuple[uint32, cm.List[string]])(x1), (uint32)(x2), &result)
+	x0, x1, x2, x3 := lower_Entry(x)
+	wasmimport_VariantMap((uint32)(x0), (uint64)(x1), (uint64)(x2), (uint64)(x3), &result)
 	return
 }
 
@@ -195,8 +261,17 @@ func wasmexport_OptionMap(x0 uint32, x1 *cm.Tuple[bool, string], x2 uint32) (res
 
 //go:wasmexport foo:foo/maps#result-map
 //export foo:foo/maps#result-map
-func wasmexport_ResultMap() (result *cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
+func wasmexport_ResultMap() (result *cm.MapResult[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
 	result_ := Exports.ResultMap()
+	result = &result_
+	return
+}
+
+//go:wasmexport foo:foo/maps#mixed-result-roundtrip
+//export foo:foo/maps#mixed-result-roundtrip
+func wasmexport_MixedResultRoundtrip(x0 uint32, x1 uint64, x2 uint64, x3 uint64) (result *MixedResult) {
+	x := lift_MixedResult((uint32)(x0), (uint64)(x1), (uint64)(x2), (uint64)(x3))
+	result_ := Exports.MixedResultRoundtrip(x)
 	result = &result_
 	return
 }
@@ -212,8 +287,8 @@ func wasmexport_RecordMap(x0 *[2]string, x1 uint32, x2 *cm.Tuple[string, uint32]
 
 //go:wasmexport foo:foo/maps#variant-map
 //export foo:foo/maps#variant-map
-func wasmexport_VariantMap(x0 uint32, x1 *cm.Tuple[uint32, cm.List[string]], x2 uint32) (result *Entry) {
-	x := lift_Entry((uint32)(x0), (*cm.Tuple[uint32, cm.List[string]])(x1), (uint32)(x2))
+func wasmexport_VariantMap(x0 uint32, x1 uint64, x2 uint64, x3 uint64) (result *Entry) {
+	x := lift_Entry((uint32)(x0), (uint64)(x1), (uint64)(x2), (uint64)(x3))
 	result_ := Exports.VariantMap(x)
 	result = &result_
 	return

@@ -10,6 +10,69 @@ import (
 	"runtime"
 )
 
+// Entry represents the variant "foo:foo/maps#entry".
+//
+//	variant entry {
+//		empty,
+//		tags(map<u32, list<string>>),
+//		wide(tuple<u64, u64, u64>),
+//	}
+type Entry struct {
+	tag   uint8
+	case1 cm.Map[uint32, cm.List[string]]
+	case2 [3]uint64
+}
+
+// Tag returns the variant's discriminant.
+func (self *Entry) Tag() uint8 { return self.tag }
+
+// EntryEmpty returns a [Entry] of case "empty".
+func EntryEmpty() Entry {
+	return Entry{tag: 0}
+}
+
+// Empty returns true if [Entry] represents the variant case "empty".
+func (self *Entry) Empty() bool {
+	return self.Tag() == 0
+}
+
+// EntryTags returns a [Entry] of case "tags".
+func EntryTags(data cm.Map[uint32, cm.List[string]]) Entry {
+	return Entry{tag: 1, case1: data}
+}
+
+// Tags returns a non-nil *[cm.Map[uint32, cm.List[string]]] if [Entry] represents the variant case "tags".
+func (self *Entry) Tags() *cm.Map[uint32, cm.List[string]] {
+	if self.tag != 1 {
+		return nil
+	}
+	return &self.case1
+}
+
+// EntryWide returns a [Entry] of case "wide".
+func EntryWide(data [3]uint64) Entry {
+	return Entry{tag: 2, case2: data}
+}
+
+// Wide returns a non-nil *[[3]uint64] if [Entry] represents the variant case "wide".
+func (self *Entry) Wide() *[3]uint64 {
+	if self.tag != 2 {
+		return nil
+	}
+	return &self.case2
+}
+
+var _EntryStrings = [3]string{
+	"empty",
+	"tags",
+	"wide",
+}
+
+// String implements [fmt.Stringer], returning the variant case name of v.
+func (v Entry) String() string {
+	return _EntryStrings[v.Tag()]
+}
+
 func memory32Value_Load(addr uint32) (v string) {
 	return string(wasm32.LoadString(addr))
 }
@@ -383,16 +446,18 @@ func memory32Value________________________Store(a *wasm32.Arena, addr uint32, v 
 	})
 }
 
-func memory32Value_____________________Load(addr uint32) (v cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
+func memory32Value_____________________Load(addr uint32) (v cm.MapResult[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
 	switch wasm32.Load[uint8](addr) {
 	case 0:
-		return cm.OK[cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]](memory32Value______________________Load(addr + 4))
+		v.SetOK(memory32Value______________________Load(addr + 4))
+		return v
 	case 1:
-		return cm.Err[cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]](memory32Value________________________Load(addr + 4))
+		v.SetErr(memory32Value________________________Load(addr + 4))
+		return v
 	}
 	panic("invalid canonical result tag")
 }
-func memory32Value_____________________Store(a *wasm32.Arena, addr uint32, v cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
+func memory32Value_____________________Store(a *wasm32.Arena, addr uint32, v cm.MapResult[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
 	if v.IsOK() {
 		wasm32.Store(addr, uint8(0))
 		memory32Value______________________Store(a, addr+4, *v.OK())
@@ -408,7 +473,7 @@ func wasmimport_ResultMap_memory32(_cmArg0 uint32)
 // ResultMap represents the imported function "result-map".
 //
 //	result-map: func() -> result<map<s16, u8>, map<s32, string>>
-func ResultMap() (result cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
+func ResultMap() (result cm.MapResult[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
 	_cmArena := new(wasm32.Arena)
 	_cmResult := _cmArena.Allocate(12, 4)
 	wasmimport_ResultMap_memory32(_cmResult)
@@ -417,30 +482,87 @@ func ResultMap() (result cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], c
 	return
 }
 
-func memory32Value___________________________Load(addr uint32) (v cm.Map[string, string]) {
+func memory32Value___________________________Load(addr uint32) (v [3]uint64) {
+	v[0] = memory32Value_____Load(addr + 0)
+	v[1] = memory32Value_____Load(addr + 8)
+	v[2] = memory32Value_____Load(addr + 16)
+	return
+}
+func memory32Value___________________________Store(a *wasm32.Arena, addr uint32, v [3]uint64) {
+	memory32Value_____Store(a, addr+0, v[0])
+	memory32Value_____Store(a, addr+8, v[1])
+	memory32Value_____Store(a, addr+16, v[2])
+}
+
+func memory32Value__________________________Load(addr uint32) (v MixedResult) {
+	switch wasm32.Load[uint8](addr) {
+	case 0:
+		v.SetOK(memory32Value___________________________Load(addr + 8))
+		return v
+	case 1:
+		v.SetErr(memory32Value________________________Load(addr + 8))
+		return v
+	}
+	panic("invalid canonical result tag")
+}
+func memory32Value__________________________Store(a *wasm32.Arena, addr uint32, v MixedResult) {
+	if v.IsOK() {
+		wasm32.Store(addr, uint8(0))
+		memory32Value___________________________Store(a, addr+8, *v.OK())
+	} else {
+		wasm32.Store(addr, uint8(1))
+		memory32Value________________________Store(a, addr+8, *v.Err())
+	}
+}
+
+var memory32Layout__________ = wasm32.Layout{Flat: 1, Scalar: 8}
+var memory32Layout_________ = wasm32.Layout{Flat: 3, Fields: []wasm32.Field{{Offset: 0, Layout: &memory32Layout__________}, {Offset: 8, Layout: &memory32Layout__________}, {Offset: 16, Layout: &memory32Layout__________}}}
+var memory32Layout___________ = wasm32.Layout{Flat: 2, Fields: []wasm32.Field{{Offset: 0, Layout: &memory32Layout_}, {Offset: 4, Layout: &memory32Layout_}}}
+var memory32Layout________ = wasm32.Layout{Flat: 4, Fields: []wasm32.Field{{Offset: 0, Layout: &memory32Layout______}}, Cases: []wasm32.Field{{Offset: 8, Layout: &memory32Layout_________}, {Offset: 8, Layout: &memory32Layout___________}}}
+
+//go:wasmimport foo:foo/maps mixed-result-roundtrip
+func wasmimport_MixedResultRoundtrip_memory32(_cmArg0 uint32, _cmArg1 uint64, _cmArg2 uint64, _cmArg3 uint64, _cmArg4 uint32)
+
+// MixedResultRoundtrip represents the imported function "mixed-result-roundtrip".
+//
+//	mixed-result-roundtrip: func(x: mixed-result) -> mixed-result
+func MixedResultRoundtrip(x MixedResult) (result MixedResult) {
+	_cmArena := new(wasm32.Arena)
+	var _cmFlat [4]uint64
+	_cmValue := _cmArena.Allocate(32, 8)
+	memory32Value__________________________Store(_cmArena, _cmValue, x)
+	memory32Layout________.Flatten(_cmValue, _cmFlat[0:4])
+	_cmResult := _cmArena.Allocate(32, 8)
+	wasmimport_MixedResultRoundtrip_memory32(uint32(_cmFlat[0]), uint64(_cmFlat[1]), uint64(_cmFlat[2]), uint64(_cmFlat[3]), _cmResult)
+	result = memory32Value__________________________Load(_cmResult + 0)
+	runtime.KeepAlive(_cmArena)
+	return
+}
+
+func memory32Value_____________________________Load(addr uint32) (v cm.Map[string, string]) {
 	return wasm32.LoadMap[cm.Map[string, string]](addr, 16, func(p uint32) cm.Tuple[string, string] {
 		return cm.Tuple[string, string]{F0: memory32Value_Load(p), F1: memory32Value_Load(p + 8)}
 	})
 }
-func memory32Value___________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[string, string]) {
+func memory32Value_____________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[string, string]) {
 	wasm32.StoreMap(a, addr, 16, 4, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[string, string]) {
 		memory32Value_Store(a, p, pair.F0)
 		memory32Value_Store(a, p+8, pair.F1)
 	})
 }
 
-func memory32Value__________________________Load(addr uint32) (v Config) {
-	v.Labels = memory32Value___________________________Load(addr + 0)
+func memory32Value____________________________Load(addr uint32) (v Config) {
+	v.Labels = memory32Value_____________________________Load(addr + 0)
 	v.Counts = memory32ValueLoad(addr + 8)
 	return
 }
-func memory32Value__________________________Store(a *wasm32.Arena, addr uint32, v Config) {
-	memory32Value___________________________Store(a, addr+0, v.Labels)
+func memory32Value____________________________Store(a *wasm32.Arena, addr uint32, v Config) {
+	memory32Value_____________________________Store(a, addr+0, v.Labels)
 	memory32ValueStore(a, addr+8, v.Counts)
 }
 
-var memory32Layout_________ = wasm32.Layout{Flat: 2, Fields: []wasm32.Field{{Offset: 0, Layout: &memory32Layout_}, {Offset: 4, Layout: &memory32Layout_}}}
-var memory32Layout________ = wasm32.Layout{Flat: 4, Fields: []wasm32.Field{{Offset: 0, Layout: &memory32Layout_________}, {Offset: 8, Layout: &memory32Layout}}}
+var memory32Layout_____________ = wasm32.Layout{Flat: 2, Fields: []wasm32.Field{{Offset: 0, Layout: &memory32Layout_}, {Offset: 4, Layout: &memory32Layout_}}}
+var memory32Layout____________ = wasm32.Layout{Flat: 4, Fields: []wasm32.Field{{Offset: 0, Layout: &memory32Layout_____________}, {Offset: 8, Layout: &memory32Layout}}}
 
 //go:wasmimport foo:foo/maps record-map
 func wasmimport_RecordMap_memory32(_cmArg0 uint32, _cmArg1 uint32, _cmArg2 uint32, _cmArg3 uint32, _cmArg4 uint32)
@@ -452,97 +574,101 @@ func RecordMap(x Config) (result Config) {
 	_cmArena := new(wasm32.Arena)
 	var _cmFlat [4]uint64
 	_cmValue := _cmArena.Allocate(16, 4)
-	memory32Value__________________________Store(_cmArena, _cmValue, x)
-	memory32Layout________.Flatten(_cmValue, _cmFlat[0:4])
+	memory32Value____________________________Store(_cmArena, _cmValue, x)
+	memory32Layout____________.Flatten(_cmValue, _cmFlat[0:4])
 	_cmResult := _cmArena.Allocate(16, 4)
 	wasmimport_RecordMap_memory32(uint32(_cmFlat[0]), uint32(_cmFlat[1]), uint32(_cmFlat[2]), uint32(_cmFlat[3]), _cmResult)
-	result = memory32Value__________________________Load(_cmResult + 0)
+	result = memory32Value____________________________Load(_cmResult + 0)
 	runtime.KeepAlive(_cmArena)
 	return
 }
 
-func memory32Value______________________________Load(addr uint32) (v cm.List[string]) {
+func memory32Value________________________________Load(addr uint32) (v cm.List[string]) {
 	return cm.List[string](cm.ToList(wasm32.LoadSequence(addr, 8, memory32Value_Load)))
 }
-func memory32Value______________________________Store(a *wasm32.Arena, addr uint32, v cm.List[string]) {
+func memory32Value________________________________Store(a *wasm32.Arena, addr uint32, v cm.List[string]) {
 	wasm32.StoreSequence(a, addr, 8, 4, v.Slice(), memory32Value_Store)
 }
 
-func memory32Value_____________________________Load(addr uint32) (v cm.Map[uint32, cm.List[string]]) {
+func memory32Value_______________________________Load(addr uint32) (v cm.Map[uint32, cm.List[string]]) {
 	return wasm32.LoadMap[cm.Map[uint32, cm.List[string]]](addr, 12, func(p uint32) cm.Tuple[uint32, cm.List[string]] {
-		return cm.Tuple[uint32, cm.List[string]]{F0: memory32Value__Load(p), F1: memory32Value______________________________Load(p + 4)}
+		return cm.Tuple[uint32, cm.List[string]]{F0: memory32Value__Load(p), F1: memory32Value________________________________Load(p + 4)}
 	})
 }
-func memory32Value_____________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[uint32, cm.List[string]]) {
+func memory32Value_______________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[uint32, cm.List[string]]) {
 	wasm32.StoreMap(a, addr, 12, 4, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[uint32, cm.List[string]]) {
 		memory32Value__Store(a, p, pair.F0)
-		memory32Value______________________________Store(a, p+4, pair.F1)
+		memory32Value________________________________Store(a, p+4, pair.F1)
 	})
 }
 
-func memory32Value____________________________Load(addr uint32) (v Entry) {
+func memory32Value______________________________Load(addr uint32) (v Entry) {
 	switch wasm32.Load[uint8](addr) {
 	case 0:
-		return cm.New[Entry](uint8(0), struct{}{})
+		return EntryEmpty()
 	case 1:
-		return cm.New[Entry](uint8(1), memory32Value_____________________________Load(addr+4))
+		return EntryTags(memory32Value_______________________________Load(addr + 8))
+	case 2:
+		return EntryWide(memory32Value___________________________Load(addr + 8))
 	}
 	panic("invalid canonical variant tag")
 }
-func memory32Value____________________________Store(a *wasm32.Arena, addr uint32, v Entry) {
+func memory32Value______________________________Store(a *wasm32.Arena, addr uint32, v Entry) {
 	tag := v.Tag()
 	wasm32.Store(addr, tag)
 	switch tag {
 	case 1:
-		memory32Value_____________________________Store(a, addr+4, *cm.Case[cm.Map[uint32, cm.List[string]]](&v, 1))
+		memory32Value_______________________________Store(a, addr+8, *v.Tags())
+	case 2:
+		memory32Value___________________________Store(a, addr+8, *v.Wide())
 	}
 }
 
-var memory32Layout___________ = wasm32.Layout{Flat: 2, Fields: []wasm32.Field{{Offset: 0, Layout: &memory32Layout_}, {Offset: 4, Layout: &memory32Layout_}}}
-var memory32Layout__________ = wasm32.Layout{Flat: 3, Fields: []wasm32.Field{{Offset: 0, Layout: &memory32Layout______}}, Cases: []wasm32.Field{{}, {Offset: 4, Layout: &memory32Layout___________}}}
+var memory32Layout_______________ = wasm32.Layout{Flat: 2, Fields: []wasm32.Field{{Offset: 0, Layout: &memory32Layout_}, {Offset: 4, Layout: &memory32Layout_}}}
+var memory32Layout______________ = wasm32.Layout{Flat: 4, Fields: []wasm32.Field{{Offset: 0, Layout: &memory32Layout______}}, Cases: []wasm32.Field{{}, {Offset: 8, Layout: &memory32Layout_______________}, {Offset: 8, Layout: &memory32Layout_________}}}
 
 //go:wasmimport foo:foo/maps variant-map
-func wasmimport_VariantMap_memory32(_cmArg0 uint32, _cmArg1 uint32, _cmArg2 uint32, _cmArg3 uint32)
+func wasmimport_VariantMap_memory32(_cmArg0 uint32, _cmArg1 uint64, _cmArg2 uint64, _cmArg3 uint64, _cmArg4 uint32)
 
 // VariantMap represents the imported function "variant-map".
 //
 //	variant-map: func(x: entry) -> entry
 func VariantMap(x Entry) (result Entry) {
 	_cmArena := new(wasm32.Arena)
-	var _cmFlat [3]uint64
-	_cmValue := _cmArena.Allocate(12, 4)
-	memory32Value____________________________Store(_cmArena, _cmValue, x)
-	memory32Layout__________.Flatten(_cmValue, _cmFlat[0:3])
-	_cmResult := _cmArena.Allocate(12, 4)
-	wasmimport_VariantMap_memory32(uint32(_cmFlat[0]), uint32(_cmFlat[1]), uint32(_cmFlat[2]), _cmResult)
-	result = memory32Value____________________________Load(_cmResult + 0)
+	var _cmFlat [4]uint64
+	_cmValue := _cmArena.Allocate(32, 8)
+	memory32Value______________________________Store(_cmArena, _cmValue, x)
+	memory32Layout______________.Flatten(_cmValue, _cmFlat[0:4])
+	_cmResult := _cmArena.Allocate(32, 8)
+	wasmimport_VariantMap_memory32(uint32(_cmFlat[0]), uint64(_cmFlat[1]), uint64(_cmFlat[2]), uint64(_cmFlat[3]), _cmResult)
+	result = memory32Value______________________________Load(_cmResult + 0)
 	runtime.KeepAlive(_cmArena)
 	return
 }
 
-func memory32Value________________________________Load(addr uint32) (v string) {
+func memory32Value__________________________________Load(addr uint32) (v string) {
 	return string(wasm32.LoadString(addr))
 }
-func memory32Value________________________________Store(a *wasm32.Arena, addr uint32, v string) {
+func memory32Value__________________________________Store(a *wasm32.Arena, addr uint32, v string) {
 	wasm32.StoreString(a, addr, string(v))
 }
 
-func memory32Value_________________________________Load(addr uint32) (v uint32) {
+func memory32Value___________________________________Load(addr uint32) (v uint32) {
 	return wasm32.Load[uint32](addr)
 }
-func memory32Value_________________________________Store(a *wasm32.Arena, addr uint32, v uint32) {
+func memory32Value___________________________________Store(a *wasm32.Arena, addr uint32, v uint32) {
 	wasm32.Store(addr, v)
 }
 
-func memory32Value_______________________________Load(addr uint32) (v Names) {
+func memory32Value_________________________________Load(addr uint32) (v Names) {
 	return wasm32.LoadMap[Names](addr, 12, func(p uint32) cm.Tuple[string, uint32] {
-		return cm.Tuple[string, uint32]{F0: memory32Value________________________________Load(p), F1: memory32Value_________________________________Load(p + 8)}
+		return cm.Tuple[string, uint32]{F0: memory32Value__________________________________Load(p), F1: memory32Value___________________________________Load(p + 8)}
 	})
 }
-func memory32Value_______________________________Store(a *wasm32.Arena, addr uint32, v Names) {
+func memory32Value_________________________________Store(a *wasm32.Arena, addr uint32, v Names) {
 	wasm32.StoreMap(a, addr, 12, 4, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[string, uint32]) {
-		memory32Value________________________________Store(a, p, pair.F0)
-		memory32Value_________________________________Store(a, p+8, pair.F1)
+		memory32Value__________________________________Store(a, p, pair.F0)
+		memory32Value___________________________________Store(a, p+8, pair.F1)
 	})
 }
 
@@ -554,10 +680,10 @@ func wasmexport_NamedRoundtrip_memory32(_cmArg0 uint32, _cmArg1 uint32) uint32 {
 	_cmFlat := []uint64{uint64(_cmArg0), uint64(_cmArg1)}
 	_cmValue := _cmArena.Allocate(8, 4)
 	memory32Layout.Unflatten(_cmValue, (_cmFlat)[0:2])
-	x = memory32Value_______________________________Load(_cmValue)
+	x = memory32Value_________________________________Load(_cmValue)
 	result = Exports.NamedRoundtrip(x)
 	_cmResult := _cmArena.Allocate(8, 4)
-	memory32Value_______________________________Store(_cmArena, _cmResult+0, result)
+	memory32Value_________________________________Store(_cmArena, _cmResult+0, result)
 	_cmArena.RetainResult(_cmResult)
 	return _cmResult
 }
@@ -565,15 +691,15 @@ func wasmexport_NamedRoundtrip_memory32(_cmArg0 uint32, _cmArg1 uint32) uint32 {
 //go:wasmexport cabi_post_foo:foo/maps#named-roundtrip
 func wasmexport_NamedRoundtrip_memory32_post(addr uint32) { wasm32.ReleaseResult(addr) }
 
-func memory32Value__________________________________Load(addr uint32) (v Same) {
+func memory32Value____________________________________Load(addr uint32) (v Same) {
 	return wasm32.LoadMap[Same](addr, 16, func(p uint32) cm.Tuple[string, string] {
-		return cm.Tuple[string, string]{F0: memory32Value________________________________Load(p), F1: memory32Value________________________________Load(p + 8)}
+		return cm.Tuple[string, string]{F0: memory32Value__________________________________Load(p), F1: memory32Value__________________________________Load(p + 8)}
 	})
 }
-func memory32Value__________________________________Store(a *wasm32.Arena, addr uint32, v Same) {
+func memory32Value____________________________________Store(a *wasm32.Arena, addr uint32, v Same) {
 	wasm32.StoreMap(a, addr, 16, 4, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[string, string]) {
-		memory32Value________________________________Store(a, p, pair.F0)
-		memory32Value________________________________Store(a, p+8, pair.F1)
+		memory32Value__________________________________Store(a, p, pair.F0)
+		memory32Value__________________________________Store(a, p+8, pair.F1)
 	})
 }
 
@@ -585,10 +711,10 @@ func wasmexport_SameRoundtrip_memory32(_cmArg0 uint32, _cmArg1 uint32) uint32 {
 	_cmFlat := []uint64{uint64(_cmArg0), uint64(_cmArg1)}
 	_cmValue := _cmArena.Allocate(8, 4)
 	memory32Layout__.Unflatten(_cmValue, (_cmFlat)[0:2])
-	x = memory32Value__________________________________Load(_cmValue)
+	x = memory32Value____________________________________Load(_cmValue)
 	result = Exports.SameRoundtrip(x)
 	_cmResult := _cmArena.Allocate(8, 4)
-	memory32Value__________________________________Store(_cmArena, _cmResult+0, result)
+	memory32Value____________________________________Store(_cmArena, _cmResult+0, result)
 	_cmArena.RetainResult(_cmResult)
 	return _cmResult
 }
@@ -596,22 +722,22 @@ func wasmexport_SameRoundtrip_memory32(_cmArg0 uint32, _cmArg1 uint32) uint32 {
 //go:wasmexport cabi_post_foo:foo/maps#same-roundtrip
 func wasmexport_SameRoundtrip_memory32_post(addr uint32) { wasm32.ReleaseResult(addr) }
 
-func memory32Value____________________________________Load(addr uint32) (v uint64) {
+func memory32Value______________________________________Load(addr uint32) (v uint64) {
 	return wasm32.Load[uint64](addr)
 }
-func memory32Value____________________________________Store(a *wasm32.Arena, addr uint32, v uint64) {
+func memory32Value______________________________________Store(a *wasm32.Arena, addr uint32, v uint64) {
 	wasm32.Store(addr, v)
 }
 
-func memory32Value___________________________________Load(addr uint32) (v cm.Map[string, uint64]) {
+func memory32Value_____________________________________Load(addr uint32) (v cm.Map[string, uint64]) {
 	return wasm32.LoadMap[cm.Map[string, uint64]](addr, 16, func(p uint32) cm.Tuple[string, uint64] {
-		return cm.Tuple[string, uint64]{F0: memory32Value________________________________Load(p), F1: memory32Value____________________________________Load(p + 8)}
+		return cm.Tuple[string, uint64]{F0: memory32Value__________________________________Load(p), F1: memory32Value______________________________________Load(p + 8)}
 	})
 }
-func memory32Value___________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[string, uint64]) {
+func memory32Value_____________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[string, uint64]) {
 	wasm32.StoreMap(a, addr, 16, 8, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[string, uint64]) {
-		memory32Value________________________________Store(a, p, pair.F0)
-		memory32Value____________________________________Store(a, p+8, pair.F1)
+		memory32Value__________________________________Store(a, p, pair.F0)
+		memory32Value______________________________________Store(a, p+8, pair.F1)
 	})
 }
 
@@ -622,34 +748,34 @@ func wasmexport_AnonymousParam_memory32(_cmArg0 uint32, _cmArg1 uint32) {
 	_cmFlat := []uint64{uint64(_cmArg0), uint64(_cmArg1)}
 	_cmValue := _cmArena.Allocate(8, 4)
 	memory32Layout___.Unflatten(_cmValue, (_cmFlat)[0:2])
-	x = memory32Value___________________________________Load(_cmValue)
+	x = memory32Value_____________________________________Load(_cmValue)
 	Exports.AnonymousParam(x)
 	runtime.KeepAlive(_cmArena)
 }
 
-func memory32Value______________________________________Load(addr uint32) (v rune) {
+func memory32Value________________________________________Load(addr uint32) (v rune) {
 	return wasm32.Load[rune](addr)
 }
-func memory32Value______________________________________Store(a *wasm32.Arena, addr uint32, v rune) {
+func memory32Value________________________________________Store(a *wasm32.Arena, addr uint32, v rune) {
 	wasm32.Store(addr, v)
 }
 
-func memory32Value_______________________________________Load(addr uint32) (v bool) {
+func memory32Value_________________________________________Load(addr uint32) (v bool) {
 	return wasm32.Load[bool](addr)
 }
-func memory32Value_______________________________________Store(a *wasm32.Arena, addr uint32, v bool) {
+func memory32Value_________________________________________Store(a *wasm32.Arena, addr uint32, v bool) {
 	wasm32.Store(addr, v)
 }
 
-func memory32Value_____________________________________Load(addr uint32) (v cm.Map[rune, bool]) {
+func memory32Value_______________________________________Load(addr uint32) (v cm.Map[rune, bool]) {
 	return wasm32.LoadMap[cm.Map[rune, bool]](addr, 8, func(p uint32) cm.Tuple[rune, bool] {
-		return cm.Tuple[rune, bool]{F0: memory32Value______________________________________Load(p), F1: memory32Value_______________________________________Load(p + 4)}
+		return cm.Tuple[rune, bool]{F0: memory32Value________________________________________Load(p), F1: memory32Value_________________________________________Load(p + 4)}
 	})
 }
-func memory32Value_____________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[rune, bool]) {
+func memory32Value_______________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[rune, bool]) {
 	wasm32.StoreMap(a, addr, 8, 4, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[rune, bool]) {
-		memory32Value______________________________________Store(a, p, pair.F0)
-		memory32Value_______________________________________Store(a, p+4, pair.F1)
+		memory32Value________________________________________Store(a, p, pair.F0)
+		memory32Value_________________________________________Store(a, p+4, pair.F1)
 	})
 }
 
@@ -659,7 +785,7 @@ func wasmexport_AnonymousRet_memory32() uint32 {
 	_cmArena := new(wasm32.Arena)
 	result = Exports.AnonymousRet()
 	_cmResult := _cmArena.Allocate(8, 4)
-	memory32Value_____________________________________Store(_cmArena, _cmResult+0, result)
+	memory32Value_______________________________________Store(_cmArena, _cmResult+0, result)
 	_cmArena.RetainResult(_cmResult)
 	return _cmResult
 }
@@ -667,60 +793,60 @@ func wasmexport_AnonymousRet_memory32() uint32 {
 //go:wasmexport cabi_post_foo:foo/maps#anonymous-ret
 func wasmexport_AnonymousRet_memory32_post(addr uint32) { wasm32.ReleaseResult(addr) }
 
-func memory32Value__________________________________________Load(addr uint32) (v uint8) {
+func memory32Value____________________________________________Load(addr uint32) (v uint8) {
 	return wasm32.Load[uint8](addr)
 }
-func memory32Value__________________________________________Store(a *wasm32.Arena, addr uint32, v uint8) {
+func memory32Value____________________________________________Store(a *wasm32.Arena, addr uint32, v uint8) {
 	wasm32.Store(addr, v)
 }
 
-func memory32Value___________________________________________Load(addr uint32) (v float64) {
+func memory32Value_____________________________________________Load(addr uint32) (v float64) {
 	return wasm32.Load[float64](addr)
 }
-func memory32Value___________________________________________Store(a *wasm32.Arena, addr uint32, v float64) {
+func memory32Value_____________________________________________Store(a *wasm32.Arena, addr uint32, v float64) {
 	wasm32.Store(addr, v)
 }
 
-func memory32Value_________________________________________Load(addr uint32) (v cm.Map[uint8, float64]) {
+func memory32Value___________________________________________Load(addr uint32) (v cm.Map[uint8, float64]) {
 	return wasm32.LoadMap[cm.Map[uint8, float64]](addr, 16, func(p uint32) cm.Tuple[uint8, float64] {
-		return cm.Tuple[uint8, float64]{F0: memory32Value__________________________________________Load(p), F1: memory32Value___________________________________________Load(p + 8)}
+		return cm.Tuple[uint8, float64]{F0: memory32Value____________________________________________Load(p), F1: memory32Value_____________________________________________Load(p + 8)}
 	})
 }
-func memory32Value_________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[uint8, float64]) {
+func memory32Value___________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[uint8, float64]) {
 	wasm32.StoreMap(a, addr, 16, 8, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[uint8, float64]) {
-		memory32Value__________________________________________Store(a, p, pair.F0)
+		memory32Value____________________________________________Store(a, p, pair.F0)
+		memory32Value_____________________________________________Store(a, p+8, pair.F1)
+	})
+}
+
+func memory32Value__________________________________________Load(addr uint32) (v cm.Map[string, cm.Map[uint8, float64]]) {
+	return wasm32.LoadMap[cm.Map[string, cm.Map[uint8, float64]]](addr, 16, func(p uint32) cm.Tuple[string, cm.Map[uint8, float64]] {
+		return cm.Tuple[string, cm.Map[uint8, float64]]{F0: memory32Value__________________________________Load(p), F1: memory32Value___________________________________________Load(p + 8)}
+	})
+}
+func memory32Value__________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[string, cm.Map[uint8, float64]]) {
+	wasm32.StoreMap(a, addr, 16, 4, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[string, cm.Map[uint8, float64]]) {
+		memory32Value__________________________________Store(a, p, pair.F0)
 		memory32Value___________________________________________Store(a, p+8, pair.F1)
 	})
 }
 
-func memory32Value________________________________________Load(addr uint32) (v cm.Map[string, cm.Map[uint8, float64]]) {
-	return wasm32.LoadMap[cm.Map[string, cm.Map[uint8, float64]]](addr, 16, func(p uint32) cm.Tuple[string, cm.Map[uint8, float64]] {
-		return cm.Tuple[string, cm.Map[uint8, float64]]{F0: memory32Value________________________________Load(p), F1: memory32Value_________________________________________Load(p + 8)}
-	})
-}
-func memory32Value________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[string, cm.Map[uint8, float64]]) {
-	wasm32.StoreMap(a, addr, 16, 4, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[string, cm.Map[uint8, float64]]) {
-		memory32Value________________________________Store(a, p, pair.F0)
-		memory32Value_________________________________________Store(a, p+8, pair.F1)
-	})
-}
-
-func memory32Value_____________________________________________Load(addr uint32) (v int64) {
+func memory32Value_______________________________________________Load(addr uint32) (v int64) {
 	return wasm32.Load[int64](addr)
 }
-func memory32Value_____________________________________________Store(a *wasm32.Arena, addr uint32, v int64) {
+func memory32Value_______________________________________________Store(a *wasm32.Arena, addr uint32, v int64) {
 	wasm32.Store(addr, v)
 }
 
-func memory32Value____________________________________________Load(addr uint32) (v cm.Map[int64, Names]) {
+func memory32Value______________________________________________Load(addr uint32) (v cm.Map[int64, Names]) {
 	return wasm32.LoadMap[cm.Map[int64, Names]](addr, 16, func(p uint32) cm.Tuple[int64, Names] {
-		return cm.Tuple[int64, Names]{F0: memory32Value_____________________________________________Load(p), F1: memory32Value_______________________________Load(p + 8)}
+		return cm.Tuple[int64, Names]{F0: memory32Value_______________________________________________Load(p), F1: memory32Value_________________________________Load(p + 8)}
 	})
 }
-func memory32Value____________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[int64, Names]) {
+func memory32Value______________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[int64, Names]) {
 	wasm32.StoreMap(a, addr, 16, 8, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[int64, Names]) {
-		memory32Value_____________________________________________Store(a, p, pair.F0)
-		memory32Value_______________________________Store(a, p+8, pair.F1)
+		memory32Value_______________________________________________Store(a, p, pair.F0)
+		memory32Value_________________________________Store(a, p+8, pair.F1)
 	})
 }
 
@@ -732,10 +858,10 @@ func wasmexport_Nested_memory32(_cmArg0 uint32, _cmArg1 uint32) uint32 {
 	_cmFlat := []uint64{uint64(_cmArg0), uint64(_cmArg1)}
 	_cmValue := _cmArena.Allocate(8, 4)
 	memory32Layout____.Unflatten(_cmValue, (_cmFlat)[0:2])
-	x = memory32Value________________________________________Load(_cmValue)
+	x = memory32Value__________________________________________Load(_cmValue)
 	result = Exports.Nested(x)
 	_cmResult := _cmArena.Allocate(8, 4)
-	memory32Value____________________________________________Store(_cmArena, _cmResult+0, result)
+	memory32Value______________________________________________Store(_cmArena, _cmResult+0, result)
 	_cmArena.RetainResult(_cmResult)
 	return _cmResult
 }
@@ -743,75 +869,75 @@ func wasmexport_Nested_memory32(_cmArg0 uint32, _cmArg1 uint32) uint32 {
 //go:wasmexport cabi_post_foo:foo/maps#nested
 func wasmexport_Nested_memory32_post(addr uint32) { wasm32.ReleaseResult(addr) }
 
-func memory32Value_______________________________________________Load(addr uint32) (v cm.Map[bool, string]) {
+func memory32Value_________________________________________________Load(addr uint32) (v cm.Map[bool, string]) {
 	return wasm32.LoadMap[cm.Map[bool, string]](addr, 12, func(p uint32) cm.Tuple[bool, string] {
-		return cm.Tuple[bool, string]{F0: memory32Value_______________________________________Load(p), F1: memory32Value________________________________Load(p + 4)}
+		return cm.Tuple[bool, string]{F0: memory32Value_________________________________________Load(p), F1: memory32Value__________________________________Load(p + 4)}
 	})
 }
-func memory32Value_______________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[bool, string]) {
+func memory32Value_________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[bool, string]) {
 	wasm32.StoreMap(a, addr, 12, 4, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[bool, string]) {
-		memory32Value_______________________________________Store(a, p, pair.F0)
-		memory32Value________________________________Store(a, p+4, pair.F1)
+		memory32Value_________________________________________Store(a, p, pair.F0)
+		memory32Value__________________________________Store(a, p+4, pair.F1)
 	})
 }
 
-func memory32Value______________________________________________Load(addr uint32) (v cm.Option[cm.Map[bool, string]]) {
+func memory32Value________________________________________________Load(addr uint32) (v cm.Option[cm.Map[bool, string]]) {
 	switch wasm32.Load[uint8](addr) {
 	case 0:
 		return
 	case 1:
-		return cm.Option[cm.Map[bool, string]](cm.Some(memory32Value_______________________________________________Load(addr + 4)))
+		return cm.Option[cm.Map[bool, string]](cm.Some(memory32Value_________________________________________________Load(addr + 4)))
 	}
 	panic("invalid canonical option tag")
 }
-func memory32Value______________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Option[cm.Map[bool, string]]) {
+func memory32Value________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Option[cm.Map[bool, string]]) {
 	if some := v.Some(); some != nil {
 		wasm32.Store(addr, uint8(1))
-		memory32Value_______________________________________________Store(a, addr+4, *some)
+		memory32Value_________________________________________________Store(a, addr+4, *some)
 	} else {
 		wasm32.Store(addr, uint8(0))
 	}
 }
 
-func memory32Value__________________________________________________Load(addr uint32) (v uint16) {
+func memory32Value____________________________________________________Load(addr uint32) (v uint16) {
 	return wasm32.Load[uint16](addr)
 }
-func memory32Value__________________________________________________Store(a *wasm32.Arena, addr uint32, v uint16) {
+func memory32Value____________________________________________________Store(a *wasm32.Arena, addr uint32, v uint16) {
 	wasm32.Store(addr, v)
 }
 
-func memory32Value___________________________________________________Load(addr uint32) (v int8) {
+func memory32Value_____________________________________________________Load(addr uint32) (v int8) {
 	return wasm32.Load[int8](addr)
 }
-func memory32Value___________________________________________________Store(a *wasm32.Arena, addr uint32, v int8) {
+func memory32Value_____________________________________________________Store(a *wasm32.Arena, addr uint32, v int8) {
 	wasm32.Store(addr, v)
 }
 
-func memory32Value_________________________________________________Load(addr uint32) (v cm.Map[uint16, int8]) {
+func memory32Value___________________________________________________Load(addr uint32) (v cm.Map[uint16, int8]) {
 	return wasm32.LoadMap[cm.Map[uint16, int8]](addr, 4, func(p uint32) cm.Tuple[uint16, int8] {
-		return cm.Tuple[uint16, int8]{F0: memory32Value__________________________________________________Load(p), F1: memory32Value___________________________________________________Load(p + 2)}
+		return cm.Tuple[uint16, int8]{F0: memory32Value____________________________________________________Load(p), F1: memory32Value_____________________________________________________Load(p + 2)}
 	})
 }
-func memory32Value_________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[uint16, int8]) {
+func memory32Value___________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[uint16, int8]) {
 	wasm32.StoreMap(a, addr, 4, 2, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[uint16, int8]) {
-		memory32Value__________________________________________________Store(a, p, pair.F0)
-		memory32Value___________________________________________________Store(a, p+2, pair.F1)
+		memory32Value____________________________________________________Store(a, p, pair.F0)
+		memory32Value_____________________________________________________Store(a, p+2, pair.F1)
 	})
 }
 
-func memory32Value________________________________________________Load(addr uint32) (v cm.Option[cm.Map[uint16, int8]]) {
+func memory32Value__________________________________________________Load(addr uint32) (v cm.Option[cm.Map[uint16, int8]]) {
 	switch wasm32.Load[uint8](addr) {
 	case 0:
 		return
 	case 1:
-		return cm.Option[cm.Map[uint16, int8]](cm.Some(memory32Value_________________________________________________Load(addr + 4)))
+		return cm.Option[cm.Map[uint16, int8]](cm.Some(memory32Value___________________________________________________Load(addr + 4)))
 	}
 	panic("invalid canonical option tag")
 }
-func memory32Value________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Option[cm.Map[uint16, int8]]) {
+func memory32Value__________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Option[cm.Map[uint16, int8]]) {
 	if some := v.Some(); some != nil {
 		wasm32.Store(addr, uint8(1))
-		memory32Value_________________________________________________Store(a, addr+4, *some)
+		memory32Value___________________________________________________Store(a, addr+4, *some)
 	} else {
 		wasm32.Store(addr, uint8(0))
 	}
@@ -825,10 +951,10 @@ func wasmexport_OptionMap_memory32(_cmArg0 uint32, _cmArg1 uint32, _cmArg2 uint3
 	_cmFlat := []uint64{uint64(_cmArg0), uint64(_cmArg1), uint64(_cmArg2)}
 	_cmValue := _cmArena.Allocate(12, 4)
 	memory32Layout_____.Unflatten(_cmValue, (_cmFlat)[0:3])
-	x = memory32Value______________________________________________Load(_cmValue)
+	x = memory32Value________________________________________________Load(_cmValue)
 	result = Exports.OptionMap(x)
 	_cmResult := _cmArena.Allocate(12, 4)
-	memory32Value________________________________________________Store(_cmArena, _cmResult+0, result)
+	memory32Value__________________________________________________Store(_cmArena, _cmResult+0, result)
 	_cmArena.RetainResult(_cmResult)
 	return _cmResult
 }
@@ -836,70 +962,72 @@ func wasmexport_OptionMap_memory32(_cmArg0 uint32, _cmArg1 uint32, _cmArg2 uint3
 //go:wasmexport cabi_post_foo:foo/maps#option-map
 func wasmexport_OptionMap_memory32_post(addr uint32) { wasm32.ReleaseResult(addr) }
 
-func memory32Value______________________________________________________Load(addr uint32) (v int16) {
+func memory32Value________________________________________________________Load(addr uint32) (v int16) {
 	return wasm32.Load[int16](addr)
 }
-func memory32Value______________________________________________________Store(a *wasm32.Arena, addr uint32, v int16) {
+func memory32Value________________________________________________________Store(a *wasm32.Arena, addr uint32, v int16) {
 	wasm32.Store(addr, v)
 }
 
-func memory32Value_____________________________________________________Load(addr uint32) (v cm.Map[int16, uint8]) {
+func memory32Value_______________________________________________________Load(addr uint32) (v cm.Map[int16, uint8]) {
 	return wasm32.LoadMap[cm.Map[int16, uint8]](addr, 4, func(p uint32) cm.Tuple[int16, uint8] {
-		return cm.Tuple[int16, uint8]{F0: memory32Value______________________________________________________Load(p), F1: memory32Value__________________________________________Load(p + 2)}
+		return cm.Tuple[int16, uint8]{F0: memory32Value________________________________________________________Load(p), F1: memory32Value____________________________________________Load(p + 2)}
 	})
 }
-func memory32Value_____________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[int16, uint8]) {
+func memory32Value_______________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[int16, uint8]) {
 	wasm32.StoreMap(a, addr, 4, 2, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[int16, uint8]) {
-		memory32Value______________________________________________________Store(a, p, pair.F0)
-		memory32Value__________________________________________Store(a, p+2, pair.F1)
+		memory32Value________________________________________________________Store(a, p, pair.F0)
+		memory32Value____________________________________________Store(a, p+2, pair.F1)
 	})
 }
 
-func memory32Value________________________________________________________Load(addr uint32) (v int32) {
+func memory32Value__________________________________________________________Load(addr uint32) (v int32) {
 	return wasm32.Load[int32](addr)
 }
-func memory32Value________________________________________________________Store(a *wasm32.Arena, addr uint32, v int32) {
+func memory32Value__________________________________________________________Store(a *wasm32.Arena, addr uint32, v int32) {
 	wasm32.Store(addr, v)
 }
 
-func memory32Value_______________________________________________________Load(addr uint32) (v cm.Map[int32, string]) {
+func memory32Value_________________________________________________________Load(addr uint32) (v cm.Map[int32, string]) {
 	return wasm32.LoadMap[cm.Map[int32, string]](addr, 12, func(p uint32) cm.Tuple[int32, string] {
-		return cm.Tuple[int32, string]{F0: memory32Value________________________________________________________Load(p), F1: memory32Value________________________________Load(p + 4)}
+		return cm.Tuple[int32, string]{F0: memory32Value__________________________________________________________Load(p), F1: memory32Value__________________________________Load(p + 4)}
 	})
 }
-func memory32Value_______________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[int32, string]) {
+func memory32Value_________________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[int32, string]) {
 	wasm32.StoreMap(a, addr, 12, 4, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[int32, string]) {
-		memory32Value________________________________________________________Store(a, p, pair.F0)
-		memory32Value________________________________Store(a, p+4, pair.F1)
+		memory32Value__________________________________________________________Store(a, p, pair.F0)
+		memory32Value__________________________________Store(a, p+4, pair.F1)
 	})
 }
 
-func memory32Value____________________________________________________Load(addr uint32) (v cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
+func memory32Value______________________________________________________Load(addr uint32) (v cm.MapResult[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
 	switch wasm32.Load[uint8](addr) {
 	case 0:
-		return cm.OK[cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]](memory32Value_____________________________________________________Load(addr + 4))
+		v.SetOK(memory32Value_______________________________________________________Load(addr + 4))
+		return v
 	case 1:
-		return cm.Err[cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]](memory32Value_______________________________________________________Load(addr + 4))
+		v.SetErr(memory32Value_________________________________________________________Load(addr + 4))
+		return v
 	}
 	panic("invalid canonical result tag")
 }
-func memory32Value____________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
+func memory32Value______________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.MapResult[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]) {
 	if v.IsOK() {
 		wasm32.Store(addr, uint8(0))
-		memory32Value_____________________________________________________Store(a, addr+4, *v.OK())
+		memory32Value_______________________________________________________Store(a, addr+4, *v.OK())
 	} else {
 		wasm32.Store(addr, uint8(1))
-		memory32Value_______________________________________________________Store(a, addr+4, *v.Err())
+		memory32Value_________________________________________________________Store(a, addr+4, *v.Err())
 	}
 }
 
 //go:wasmexport foo:foo/maps#result-map
 func wasmexport_ResultMap_memory32() uint32 {
-	var result cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]
+	var result cm.MapResult[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]]
 	_cmArena := new(wasm32.Arena)
 	result = Exports.ResultMap()
 	_cmResult := _cmArena.Allocate(12, 4)
-	memory32Value____________________________________________________Store(_cmArena, _cmResult+0, result)
+	memory32Value______________________________________________________Store(_cmArena, _cmResult+0, result)
 	_cmArena.RetainResult(_cmResult)
 	return _cmResult
 }
@@ -907,26 +1035,78 @@ func wasmexport_ResultMap_memory32() uint32 {
 //go:wasmexport cabi_post_foo:foo/maps#result-map
 func wasmexport_ResultMap_memory32_post(addr uint32) { wasm32.ReleaseResult(addr) }
 
-func memory32Value__________________________________________________________Load(addr uint32) (v cm.Map[string, string]) {
+func memory32Value____________________________________________________________Load(addr uint32) (v [3]uint64) {
+	v[0] = memory32Value______________________________________Load(addr + 0)
+	v[1] = memory32Value______________________________________Load(addr + 8)
+	v[2] = memory32Value______________________________________Load(addr + 16)
+	return
+}
+func memory32Value____________________________________________________________Store(a *wasm32.Arena, addr uint32, v [3]uint64) {
+	memory32Value______________________________________Store(a, addr+0, v[0])
+	memory32Value______________________________________Store(a, addr+8, v[1])
+	memory32Value______________________________________Store(a, addr+16, v[2])
+}
+
+func memory32Value___________________________________________________________Load(addr uint32) (v MixedResult) {
+	switch wasm32.Load[uint8](addr) {
+	case 0:
+		v.SetOK(memory32Value____________________________________________________________Load(addr + 8))
+		return v
+	case 1:
+		v.SetErr(memory32Value_________________________________________________________Load(addr + 8))
+		return v
+	}
+	panic("invalid canonical result tag")
+}
+func memory32Value___________________________________________________________Store(a *wasm32.Arena, addr uint32, v MixedResult) {
+	if v.IsOK() {
+		wasm32.Store(addr, uint8(0))
+		memory32Value____________________________________________________________Store(a, addr+8, *v.OK())
+	} else {
+		wasm32.Store(addr, uint8(1))
+		memory32Value_________________________________________________________Store(a, addr+8, *v.Err())
+	}
+}
+
+//go:wasmexport foo:foo/maps#mixed-result-roundtrip
+func wasmexport_MixedResultRoundtrip_memory32(_cmArg0 uint32, _cmArg1 uint64, _cmArg2 uint64, _cmArg3 uint64) uint32 {
+	var x MixedResult
+	var result MixedResult
+	_cmArena := new(wasm32.Arena)
+	_cmFlat := []uint64{uint64(_cmArg0), uint64(_cmArg1), uint64(_cmArg2), uint64(_cmArg3)}
+	_cmValue := _cmArena.Allocate(32, 8)
+	memory32Layout________.Unflatten(_cmValue, (_cmFlat)[0:4])
+	x = memory32Value___________________________________________________________Load(_cmValue)
+	result = Exports.MixedResultRoundtrip(x)
+	_cmResult := _cmArena.Allocate(32, 8)
+	memory32Value___________________________________________________________Store(_cmArena, _cmResult+0, result)
+	_cmArena.RetainResult(_cmResult)
+	return _cmResult
+}
+
+//go:wasmexport cabi_post_foo:foo/maps#mixed-result-roundtrip
+func wasmexport_MixedResultRoundtrip_memory32_post(addr uint32) { wasm32.ReleaseResult(addr) }
+
+func memory32Value______________________________________________________________Load(addr uint32) (v cm.Map[string, string]) {
 	return wasm32.LoadMap[cm.Map[string, string]](addr, 16, func(p uint32) cm.Tuple[string, string] {
-		return cm.Tuple[string, string]{F0: memory32Value________________________________Load(p), F1: memory32Value________________________________Load(p + 8)}
+		return cm.Tuple[string, string]{F0: memory32Value__________________________________Load(p), F1: memory32Value__________________________________Load(p + 8)}
 	})
 }
-func memory32Value__________________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[string, string]) {
+func memory32Value______________________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[string, string]) {
 	wasm32.StoreMap(a, addr, 16, 4, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[string, string]) {
-		memory32Value________________________________Store(a, p, pair.F0)
-		memory32Value________________________________Store(a, p+8, pair.F1)
+		memory32Value__________________________________Store(a, p, pair.F0)
+		memory32Value__________________________________Store(a, p+8, pair.F1)
 	})
 }
 
-func memory32Value_________________________________________________________Load(addr uint32) (v Config) {
-	v.Labels = memory32Value__________________________________________________________Load(addr + 0)
-	v.Counts = memory32Value_______________________________Load(addr + 8)
+func memory32Value_____________________________________________________________Load(addr uint32) (v Config) {
+	v.Labels = memory32Value______________________________________________________________Load(addr + 0)
+	v.Counts = memory32Value_________________________________Load(addr + 8)
 	return
 }
-func memory32Value_________________________________________________________Store(a *wasm32.Arena, addr uint32, v Config) {
-	memory32Value__________________________________________________________Store(a, addr+0, v.Labels)
-	memory32Value_______________________________Store(a, addr+8, v.Counts)
+func memory32Value_____________________________________________________________Store(a *wasm32.Arena, addr uint32, v Config) {
+	memory32Value______________________________________________________________Store(a, addr+0, v.Labels)
+	memory32Value_________________________________Store(a, addr+8, v.Counts)
 }
 
 //go:wasmexport foo:foo/maps#record-map
@@ -936,11 +1116,11 @@ func wasmexport_RecordMap_memory32(_cmArg0 uint32, _cmArg1 uint32, _cmArg2 uint3
 	_cmArena := new(wasm32.Arena)
 	_cmFlat := []uint64{uint64(_cmArg0), uint64(_cmArg1), uint64(_cmArg2), uint64(_cmArg3)}
 	_cmValue := _cmArena.Allocate(16, 4)
-	memory32Layout________.Unflatten(_cmValue, (_cmFlat)[0:4])
-	x = memory32Value_________________________________________________________Load(_cmValue)
+	memory32Layout____________.Unflatten(_cmValue, (_cmFlat)[0:4])
+	x = memory32Value_____________________________________________________________Load(_cmValue)
 	result = Exports.RecordMap(x)
 	_cmResult := _cmArena.Allocate(16, 4)
-	memory32Value_________________________________________________________Store(_cmArena, _cmResult+0, result)
+	memory32Value_____________________________________________________________Store(_cmArena, _cmResult+0, result)
 	_cmArena.RetainResult(_cmResult)
 	return _cmResult
 }
@@ -948,55 +1128,59 @@ func wasmexport_RecordMap_memory32(_cmArg0 uint32, _cmArg1 uint32, _cmArg2 uint3
 //go:wasmexport cabi_post_foo:foo/maps#record-map
 func wasmexport_RecordMap_memory32_post(addr uint32) { wasm32.ReleaseResult(addr) }
 
-func memory32Value_____________________________________________________________Load(addr uint32) (v cm.List[string]) {
-	return cm.List[string](cm.ToList(wasm32.LoadSequence(addr, 8, memory32Value________________________________Load)))
+func memory32Value_________________________________________________________________Load(addr uint32) (v cm.List[string]) {
+	return cm.List[string](cm.ToList(wasm32.LoadSequence(addr, 8, memory32Value__________________________________Load)))
 }
-func memory32Value_____________________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.List[string]) {
-	wasm32.StoreSequence(a, addr, 8, 4, v.Slice(), memory32Value________________________________Store)
+func memory32Value_________________________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.List[string]) {
+	wasm32.StoreSequence(a, addr, 8, 4, v.Slice(), memory32Value__________________________________Store)
 }
 
-func memory32Value____________________________________________________________Load(addr uint32) (v cm.Map[uint32, cm.List[string]]) {
+func memory32Value________________________________________________________________Load(addr uint32) (v cm.Map[uint32, cm.List[string]]) {
 	return wasm32.LoadMap[cm.Map[uint32, cm.List[string]]](addr, 12, func(p uint32) cm.Tuple[uint32, cm.List[string]] {
-		return cm.Tuple[uint32, cm.List[string]]{F0: memory32Value_________________________________Load(p), F1: memory32Value_____________________________________________________________Load(p + 4)}
+		return cm.Tuple[uint32, cm.List[string]]{F0: memory32Value___________________________________Load(p), F1: memory32Value_________________________________________________________________Load(p + 4)}
 	})
 }
-func memory32Value____________________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[uint32, cm.List[string]]) {
+func memory32Value________________________________________________________________Store(a *wasm32.Arena, addr uint32, v cm.Map[uint32, cm.List[string]]) {
 	wasm32.StoreMap(a, addr, 12, 4, v, func(a *wasm32.Arena, p uint32, pair cm.Tuple[uint32, cm.List[string]]) {
-		memory32Value_________________________________Store(a, p, pair.F0)
-		memory32Value_____________________________________________________________Store(a, p+4, pair.F1)
+		memory32Value___________________________________Store(a, p, pair.F0)
+		memory32Value_________________________________________________________________Store(a, p+4, pair.F1)
 	})
 }
 
-func memory32Value___________________________________________________________Load(addr uint32) (v Entry) {
+func memory32Value_______________________________________________________________Load(addr uint32) (v Entry) {
 	switch wasm32.Load[uint8](addr) {
 	case 0:
-		return cm.New[Entry](uint8(0), struct{}{})
+		return EntryEmpty()
 	case 1:
-		return cm.New[Entry](uint8(1), memory32Value____________________________________________________________Load(addr+4))
+		return EntryTags(memory32Value________________________________________________________________Load(addr + 8))
+	case 2:
+		return EntryWide(memory32Value____________________________________________________________Load(addr + 8))
 	}
 	panic("invalid canonical variant tag")
 }
-func memory32Value___________________________________________________________Store(a *wasm32.Arena, addr uint32, v Entry) {
+func memory32Value_______________________________________________________________Store(a *wasm32.Arena, addr uint32, v Entry) {
 	tag := v.Tag()
 	wasm32.Store(addr, tag)
 	switch tag {
 	case 1:
-		memory32Value____________________________________________________________Store(a, addr+4, *cm.Case[cm.Map[uint32, cm.List[string]]](&v, 1))
+		memory32Value________________________________________________________________Store(a, addr+8, *v.Tags())
+	case 2:
+		memory32Value____________________________________________________________Store(a, addr+8, *v.Wide())
 	}
 }
 
 //go:wasmexport foo:foo/maps#variant-map
-func wasmexport_VariantMap_memory32(_cmArg0 uint32, _cmArg1 uint32, _cmArg2 uint32) uint32 {
+func wasmexport_VariantMap_memory32(_cmArg0 uint32, _cmArg1 uint64, _cmArg2 uint64, _cmArg3 uint64) uint32 {
 	var x Entry
 	var result Entry
 	_cmArena := new(wasm32.Arena)
-	_cmFlat := []uint64{uint64(_cmArg0), uint64(_cmArg1), uint64(_cmArg2)}
-	_cmValue := _cmArena.Allocate(12, 4)
-	memory32Layout__________.Unflatten(_cmValue, (_cmFlat)[0:3])
-	x = memory32Value___________________________________________________________Load(_cmValue)
+	_cmFlat := []uint64{uint64(_cmArg0), uint64(_cmArg1), uint64(_cmArg2), uint64(_cmArg3)}
+	_cmValue := _cmArena.Allocate(32, 8)
+	memory32Layout______________.Unflatten(_cmValue, (_cmFlat)[0:4])
+	x = memory32Value_______________________________________________________________Load(_cmValue)
 	result = Exports.VariantMap(x)
-	_cmResult := _cmArena.Allocate(12, 4)
-	memory32Value___________________________________________________________Store(_cmArena, _cmResult+0, result)
+	_cmResult := _cmArena.Allocate(32, 8)
+	memory32Value_______________________________________________________________Store(_cmArena, _cmResult+0, result)
 	_cmArena.RetainResult(_cmResult)
 	return _cmResult
 }

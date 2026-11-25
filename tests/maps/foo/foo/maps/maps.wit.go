@@ -17,6 +17,11 @@ type Names cm.Map[string, uint32]
 //	type same = map<string, string>
 type Same cm.Map[string, string]
 
+// MixedResult represents the result "foo:foo/maps#mixed-result".
+//
+//	type mixed-result = result<tuple<u64, u64, u64>, map<s32, string>>
+type MixedResult cm.MapResult[TupleU64U64U64Shape, [3]uint64, cm.Map[int32, string]]
+
 // Config represents the record "foo:foo/maps#config".
 //
 //	record config {
@@ -27,43 +32,4 @@ type Config struct {
 	_      cm.HostLayout          `json:"-"`
 	Labels cm.Map[string, string] `json:"labels"`
 	Counts Names                  `json:"counts"`
-}
-
-// Entry represents the variant "foo:foo/maps#entry".
-//
-//	variant entry {
-//		empty,
-//		tags(map<u32, list<string>>),
-//	}
-type Entry cm.Variant[uint8, cm.Map[uint32, cm.List[string]], cm.Map[uint32, cm.List[string]]]
-
-// EntryEmpty returns a [Entry] of case "empty".
-func EntryEmpty() Entry {
-	var data struct{}
-	return cm.New[Entry](0, data)
-}
-
-// Empty returns true if [Entry] represents the variant case "empty".
-func (self *Entry) Empty() bool {
-	return self.Tag() == 0
-}
-
-// EntryTags returns a [Entry] of case "tags".
-func EntryTags(data cm.Map[uint32, cm.List[string]]) Entry {
-	return cm.New[Entry](1, data)
-}
-
-// Tags returns a non-nil *[cm.Map[uint32, cm.List[string]]] if [Entry] represents the variant case "tags".
-func (self *Entry) Tags() *cm.Map[uint32, cm.List[string]] {
-	return cm.Case[cm.Map[uint32, cm.List[string]]](self, 1)
-}
-
-var _EntryStrings = [2]string{
-	"empty",
-	"tags",
-}
-
-// String implements [fmt.Stringer], returning the variant case name of v.
-func (v Entry) String() string {
-	return _EntryStrings[v.Tag()]
 }

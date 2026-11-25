@@ -41,7 +41,12 @@ var Exports struct {
 	// ResultMap represents the caller-defined, exported function "result-map".
 	//
 	//	result-map: func() -> result<map<s16, u8>, map<s32, string>>
-	ResultMap func() (result cm.Result[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]])
+	ResultMap func() (result cm.MapResult[cm.Map[int16, uint8], cm.Map[int16, uint8], cm.Map[int32, string]])
+
+	// MixedResultRoundtrip represents the caller-defined, exported function "mixed-result-roundtrip".
+	//
+	//	mixed-result-roundtrip: func(x: mixed-result) -> mixed-result
+	MixedResultRoundtrip func(x MixedResult) (result MixedResult)
 
 	// RecordMap represents the caller-defined, exported function "record-map".
 	//

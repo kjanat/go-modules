@@ -64,6 +64,8 @@ wasm-tools component wit -j --all-features example.wit > example.wit.json
 
 Generated bindings use `cm.Map` for map parameters and results, including maps in records, variants, and other maps. Standard Go bindings convert between Go values and the 32-bit Canonical ABI at the component boundary. TinyGo uses its native 32-bit Wasm layout.
 
+Use the generated case constructors for variants. For results containing maps, initialize the generated result with `SetOK` or `SetErr`. Standard Go stores these cases in typed fields so the garbage collector can trace maps in the active case.
+
 To build the core module for a standard Go component, use reactor mode and allow access to the runtime allocator during WASI initialization:
 
 ```sh

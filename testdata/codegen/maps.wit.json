@@ -25,8 +25,9 @@
       "types": {
         "names": 0,
         "same": 1,
-        "config": 3,
-        "entry": 6
+        "mixed-result": 4,
+        "config": 6,
+        "entry": 9
       },
       "functions": {
         "named-roundtrip": {
@@ -57,7 +58,7 @@
           "params": [
             {
               "name": "x",
-              "type": 7
+              "type": 10
             }
           ]
         },
@@ -65,7 +66,7 @@
           "name": "anonymous-ret",
           "kind": "freestanding",
           "params": [],
-          "result": 8
+          "result": 11
         },
         "nested": {
           "name": "nested",
@@ -73,10 +74,10 @@
           "params": [
             {
               "name": "x",
-              "type": 10
+              "type": 13
             }
           ],
-          "result": 11
+          "result": 14
         },
         "option-map": {
           "name": "option-map",
@@ -84,30 +85,30 @@
           "params": [
             {
               "name": "x",
-              "type": 13
+              "type": 16
             }
           ],
-          "result": 15
+          "result": 18
         },
         "result-map": {
           "name": "result-map",
           "kind": "freestanding",
           "params": [],
-          "result": 18
+          "result": 20
         },
-        "record-map": {
-          "name": "record-map",
+        "mixed-result-roundtrip": {
+          "name": "mixed-result-roundtrip",
           "kind": "freestanding",
           "params": [
             {
               "name": "x",
-              "type": 3
+              "type": 4
             }
           ],
-          "result": 3
+          "result": 4
         },
-        "variant-map": {
-          "name": "variant-map",
+        "record-map": {
+          "name": "record-map",
           "kind": "freestanding",
           "params": [
             {
@@ -116,6 +117,17 @@
             }
           ],
           "result": 6
+        },
+        "variant-map": {
+          "name": "variant-map",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "x",
+              "type": 9
+            }
+          ],
+          "result": 9
         }
       },
       "package": 0
@@ -149,6 +161,41 @@
     {
       "name": null,
       "kind": {
+        "tuple": {
+          "types": [
+            "u64",
+            "u64",
+            "u64"
+          ]
+        }
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "map": [
+          "s32",
+          "string"
+        ]
+      },
+      "owner": null
+    },
+    {
+      "name": "mixed-result",
+      "kind": {
+        "result": {
+          "ok": 2,
+          "err": 3
+        }
+      },
+      "owner": {
+        "interface": 0
+      }
+    },
+    {
+      "name": null,
+      "kind": {
         "map": [
           "string",
           "string"
@@ -163,7 +210,7 @@
           "fields": [
             {
               "name": "labels",
-              "type": 2
+              "type": 5
             },
             {
               "name": "counts",
@@ -188,7 +235,7 @@
       "kind": {
         "map": [
           "u32",
-          4
+          7
         ]
       },
       "owner": null
@@ -204,7 +251,11 @@
             },
             {
               "name": "tags",
-              "type": 5
+              "type": 8
+            },
+            {
+              "name": "wide",
+              "type": 2
             }
           ]
         }
@@ -248,7 +299,7 @@
       "kind": {
         "map": [
           "string",
-          9
+          12
         ]
       },
       "owner": null
@@ -276,7 +327,7 @@
     {
       "name": null,
       "kind": {
-        "option": 12
+        "option": 15
       },
       "owner": null
     },
@@ -293,7 +344,7 @@
     {
       "name": null,
       "kind": {
-        "option": 14
+        "option": 17
       },
       "owner": null
     },
@@ -310,19 +361,9 @@
     {
       "name": null,
       "kind": {
-        "map": [
-          "s32",
-          "string"
-        ]
-      },
-      "owner": null
-    },
-    {
-      "name": null,
-      "kind": {
         "result": {
-          "ok": 16,
-          "err": 17
+          "ok": 19,
+          "err": 3
         }
       },
       "owner": null
