@@ -48,9 +48,11 @@ const (
 )
 
 type typeDecl struct {
-	file  *gen.File // The Go file this type belongs to
-	scope gen.Scope // Scope for type-local declarations like method names
-	name  string    // The unique Go name for this type
+	file           *gen.File // The Go file this type belongs to
+	scope          gen.Scope // Scope for type-local declarations like method names
+	name           string    // The unique Go name for this type
+	variantCases   []variantCaseNames
+	variantStrings string
 }
 
 type funcDecl struct {
@@ -94,6 +96,8 @@ type generator struct {
 	opts  options
 	res   *wit.Resolve
 	world *wit.World // optional, can be nil
+
+	mapABIs map[*gen.Package]*wasm32Generator
 
 	// versioned is set to true if there are multiple versions of a WIT package in res,
 	// which affects the generated Go package paths.
@@ -429,6 +433,16 @@ func (g *generator) defineTypeDef(dir wit.Direction, t *wit.TypeDef, name string
 		b.WriteString(formatDocComments(t.Docs.Contents, false))
 		b.WriteString("//\n")
 		b.WriteString(formatDocComments(t.Kind.WIT(nil, t.TypeName()), true))
+		if _, ok := t.Kind.(*wit.Variant); ok && containsMap(t) {
+			// The standard Go codec handles the wire layout, so the Go
+			// type can keep each case in a field that GC can trace.
+			for _, standard := range []bool{false, true} {
+				file := g.mapABIFile(decl.file.Package, standard)
+				file.Write(b.Bytes())
+				stringio.Write(file, "type ", decl.name, " ", g.variantRep(file, dir, t, decl.name, standard), "\n\n")
+			}
+			return nil
+		}
 		stringio.Write(&b, "type ", decl.name, " ", g.typeDefRep(decl.file, dir, t, decl.name), "\n\n")
 	}
 
@@ -669,7 +683,7 @@ func (g *generator) typeDefRep(file *gen.File, dir wit.Direction, t *wit.TypeDef
 	case *wit.Enum:
 		return g.enumRep(file, dir, kind, goName)
 	case *wit.Variant:
-		return g.variantRep(file, dir, t, goName)
+		return g.variantRep(file, dir, t, goName, false)
 	case *wit.Result:
 		return g.resultRep(file, dir, kind)
 	case *wit.Option:
@@ -895,9 +909,27 @@ func (g *generator) enumRep(file *gen.File, dir wit.Direction, e *wit.Enum, goNa
 	return b.String()
 }
 
+type variantCaseNames struct {
+	constructor string
+	getter      string
+}
+
+func (g *generator) variantNames(dir wit.Direction, t *wit.TypeDef) *typeDecl {
+	decl, _ := g.typeDecl(dir, t)
+	if decl.variantCases == nil {
+		for _, c := range t.Kind.(*wit.Variant).Cases {
+			getter := decl.scope.DeclareName(GoName(c.Name, true))
+			constructor := decl.file.DeclareName(decl.name + getter)
+			decl.variantCases = append(decl.variantCases, variantCaseNames{constructor, getter})
+		}
+		decl.variantStrings = decl.file.DeclareName("_" + GoName(decl.name, true) + "Strings")
+	}
+	return decl
+}
+
 // variantRep is special because it accepts a [wit.TypeDef] instead of a [wit.Variant].
 // The TypeDef is used to determine the scope for generating accessor methods on the type.
-func (g *generator) variantRep(file *gen.File, dir wit.Direction, t *wit.TypeDef, goName string) string {
+func (g *generator) variantRep(file *gen.File, dir wit.Direction, t *wit.TypeDef, goName string, standard bool) string {
 	v := t.Kind.(*wit.Variant)
 	// If the variant has no associated types, represent the variant as an enum.
 	if e := v.Enum(); e != nil {
@@ -905,30 +937,36 @@ func (g *generator) variantRep(file *gen.File, dir wit.Direction, t *wit.TypeDef
 	}
 
 	disc := wit.Discriminant(len(v.Cases))
-	types := v.Types()
-	shape := variantShape(types)
-	align := variantAlign(types)
-
-	var typeShape string
-	if len(types) == 1 {
-		typeShape = g.typeRep(file, dir, shape)
-	} else {
-		typeShape = g.typeShape(file, dir, shape)
-	}
-
-	decl, _ := g.typeDecl(dir, t)
-	scope := decl.scope
-
-	// Emit type
+	decl := g.variantNames(dir, t)
 	var b strings.Builder
-	cm := file.Import(g.opts.cmPackage)
-	stringio.Write(&b, cm, ".Variant[", g.typeRep(file, dir, disc), ", ", typeShape, ", ", g.typeRep(file, dir, align), "]\n\n")
+	if standard {
+		tag := g.typeRep(file, dir, disc)
+		stringio.Write(&b, "struct {\ntag ", tag, "\n")
+		for i, c := range v.Cases {
+			if c.Type != nil {
+				fmt.Fprintf(&b, "case%d %s\n", i, g.typeRep(file, dir, c.Type))
+			}
+		}
+		fmt.Fprintf(&b, "}\n\n// Tag returns the variant's discriminant.\nfunc (self *%s) Tag() %s { return self.tag }\n\n", goName, tag)
+	} else {
+		types := v.Types()
+		shape := variantShape(types)
+		align := variantAlign(types)
+		var typeShape string
+		if len(types) == 1 {
+			typeShape = g.typeRep(file, dir, shape)
+		} else {
+			typeShape = g.typeShape(file, dir, shape)
+		}
+		cm := file.Import(g.opts.cmPackage)
+		stringio.Write(&b, cm, ".Variant[", g.typeRep(file, dir, disc), ", ", typeShape, ", ", g.typeRep(file, dir, align), "]\n\n")
+	}
 
 	// Emit cases
 	for i, c := range v.Cases {
 		caseNum := strconv.Itoa(i)
-		caseName := scope.DeclareName(GoName(c.Name, true))
-		constructorName := file.DeclareName(goName + caseName)
+		caseName := decl.variantCases[i].getter
+		constructorName := decl.variantCases[i].constructor
 		typeRep := g.typeRep(file, dir, c.Type)
 
 		// Emit constructor
@@ -941,10 +979,18 @@ func (g *generator) variantRep(file *gen.File, dir wit.Direction, t *wit.TypeDef
 			stringio.Write(&b, dataName, " ", typeRep)
 		}
 		stringio.Write(&b, ") ", goName, " {")
-		if c.Type == nil {
-			stringio.Write(&b, "var ", dataName, " ", typeRep, "\n")
+		if standard {
+			fmt.Fprintf(&b, "return %s{tag: %d", goName, i)
+			if c.Type != nil {
+				fmt.Fprintf(&b, ", case%d: %s", i, dataName)
+			}
+			b.WriteString("}\n")
+		} else {
+			if c.Type == nil {
+				stringio.Write(&b, "var ", dataName, " ", typeRep, "\n")
+			}
+			stringio.Write(&b, "return ", g.cmCall(file, "New["+goName+"]", caseNum+", "+dataName), "\n")
 		}
-		stringio.Write(&b, "return ", g.cmCall(file, "New["+goName+"]", caseNum+", "+dataName), "\n")
 		b.WriteString("}\n\n")
 
 		// Emit getter
@@ -958,12 +1004,16 @@ func (g *generator) variantRep(file *gen.File, dir wit.Direction, t *wit.TypeDef
 			// Case with associated type T returns *T
 			stringio.Write(&b, "// ", caseName, " returns a non-nil *[", typeRep, "] if [", goName, "] represents the variant case \"", c.Name, "\".\n")
 			stringio.Write(&b, "func (self *", goName, ") ", caseName, "() *", typeRep, " {\n")
-			stringio.Write(&b, "return ", g.cmCall(file, "Case["+typeRep+"]", "self, "+caseNum))
+			if standard {
+				fmt.Fprintf(&b, "if self.tag != %d { return nil }\nreturn &self.case%d\n", i, i)
+			} else {
+				stringio.Write(&b, "return ", g.cmCall(file, "Case["+typeRep+"]", "self, "+caseNum))
+			}
 			b.WriteString("}\n\n")
 		}
 	}
 
-	stringsName := file.DeclareName("_" + GoName(goName, true) + "Strings")
+	stringsName := decl.variantStrings
 	stringio.Write(&b, "var ", stringsName, " = [", fmt.Sprintf("%d", len(v.Cases)), "]string {\n")
 	for _, c := range v.Cases {
 		stringio.Write(&b, `"`, c.Name, `"`, ",\n")
@@ -993,7 +1043,11 @@ func (g *generator) resultRep(file *gen.File, dir wit.Direction, r *wit.Result) 
 	if r.OK == nil && r.Err == nil {
 		b.WriteString(".BoolResult")
 	} else {
-		stringio.Write(&b, ".Result[", typeShape, ", ", g.typeRep(file, dir, r.OK), ", ", g.typeRep(file, dir, r.Err), "]")
+		name := ".Result["
+		if containsMap(r.OK) || containsMap(r.Err) {
+			name = ".MapResult["
+		}
+		stringio.Write(&b, name, typeShape, ", ", g.typeRep(file, dir, r.OK), ", ", g.typeRep(file, dir, r.Err), "]")
 	}
 	return b.String()
 }
@@ -1224,13 +1278,16 @@ func (g *generator) lowerFlags(file *gen.File, dir wit.Direction, t *wit.TypeDef
 }
 
 func (g *generator) lowerVariant(file *gen.File, dir wit.Direction, t *wit.TypeDef, input string) string {
-	// decl, _ := g.typeDecl(dir, t)
 	v := t.Kind.(*wit.Variant)
 	flat := t.Flat()
 	if v.Enum() != nil {
 		return g.cast(file, dir, t, flat[0], input)
 	}
 	abiFile := g.abiFile(file.Package)
+	var decl *typeDecl
+	if containsMap(t) {
+		decl = g.variantNames(dir, t)
+	}
 	var b strings.Builder
 	stringio.Write(&b, "f0 = ", g.cast(abiFile, dir, wit.Discriminant(len(v.Cases)), flat[0], "v.Tag()"), "\n")
 	stringio.Write(&b, "switch f0 {\n")
@@ -1239,8 +1296,12 @@ func (g *generator) lowerVariant(file *gen.File, dir wit.Direction, t *wit.TypeD
 			continue
 		}
 		caseNum := strconv.Itoa(i)
-		// caseName := decl.scope.GetName(GoName(c.Name, true))
-		input := "*" + g.cmCall(abiFile, "Case["+g.typeRep(file, dir, c.Type)+"]", "&v, "+caseNum)
+		var input string
+		if decl != nil {
+			input = "*v." + decl.variantCases[i].getter + "()"
+		} else {
+			input = "*" + g.cmCall(abiFile, "Case["+g.typeRep(file, dir, c.Type)+"]", "&v, "+caseNum)
+		}
 		stringio.Write(&b, "case ", caseNum, ": // ", c.Name, "\n")
 		b.WriteString(g.lowerVariantCaseInto(abiFile, dir, c.Type, flat[1:], input))
 	}
@@ -1449,12 +1510,24 @@ func (g *generator) liftVariant(file *gen.File, dir wit.Direction, t *wit.TypeDe
 		return g.cast(file, dir, flat[0], t, input)
 	}
 	abiFile := g.abiFile(file.Package)
+	var decl *typeDecl
+	if containsMap(t) {
+		decl = g.variantNames(dir, t)
+	}
 	var b strings.Builder
 	stringio.Write(&b, "switch f0 {\n")
 	for i, c := range v.Cases {
 		tag := strconv.Itoa(i)
 		stringio.Write(&b, "case ", tag, ":\n")
-		stringio.Write(&b, "return ", g.cmCall(abiFile, "New["+g.typeRep(abiFile, dir, t)+"]", tag+", "+g.liftVariantCase(abiFile, dir, c.Type, flat[1:])), "\n")
+		payload := g.liftVariantCase(abiFile, dir, c.Type, flat[1:])
+		if decl != nil {
+			if c.Type == nil {
+				payload = ""
+			}
+			stringio.Write(&b, "return ", abiFile.RelativeName(decl.file.Package, decl.variantCases[i].constructor), "(", payload, ")\n")
+		} else {
+			stringio.Write(&b, "return ", g.cmCall(abiFile, "New["+g.typeRep(abiFile, dir, t)+"]", tag+", "+payload), "\n")
+		}
 	}
 	b.WriteString("}\n")
 	stringio.Write(&b, "panic(\"lift variant: unknown case: \" + ", abiFile.Import("strconv"), ".Itoa(int(f0)))\n")
@@ -1470,10 +1543,18 @@ func (g *generator) liftResult(file *gen.File, dir wit.Direction, t *wit.TypeDef
 	abiFile := g.abiFile(file.Package)
 	var b strings.Builder
 	stringio.Write(&b, "switch f0 {\n")
-	b.WriteString("case 0:\n")
-	stringio.Write(&b, "return ", g.cmCall(abiFile, "OK["+g.typeRep(abiFile, dir, t)+"]", g.liftVariantCase(abiFile, dir, r.OK, flat[1:])), "\n")
-	b.WriteString("case 1:\n")
-	stringio.Write(&b, "return ", g.cmCall(abiFile, "Err["+g.typeRep(abiFile, dir, t)+"]", g.liftVariantCase(abiFile, dir, r.Err, flat[1:])), "\n")
+	mapResult := containsMap(t)
+	rep := g.typeRep(abiFile, dir, t)
+	for i, typ := range []wit.Type{r.OK, r.Err} {
+		method := []string{"OK", "Err"}[i]
+		payload := g.liftVariantCase(abiFile, dir, typ, flat[1:])
+		fmt.Fprintf(&b, "case %d:\n", i)
+		if mapResult {
+			fmt.Fprintf(&b, "var result %s\nresult.Set%s(%s)\nreturn result\n", rep, method, payload)
+		} else {
+			stringio.Write(&b, "return ", g.cmCall(abiFile, method+"["+rep+"]", payload), "\n")
+		}
+	}
 	b.WriteString("}\n")
 	stringio.Write(&b, "panic(\"lift result: unknown case: \" + ", abiFile.Import("strconv"), ".Itoa(int(f0)))\n")
 	return g.typeDefLiftFunction(file, dir, t, input, b.String())
@@ -1648,7 +1729,13 @@ func (g *generator) goParams(scope gen.Scope, dir wit.Direction, params []wit.Pa
 
 func (g *generator) declareFunction(owner wit.TypeOwner, dir wit.Direction, f *wit.Function) (*funcDecl, error) {
 	file := g.fileFor(owner)
-	wasmFile := g.wasmFileFor(owner)
+	var wasmFile *gen.File
+	mapABI := usesMap(f)
+	if mapABI {
+		wasmFile = g.mapABIFile(file.Package, false)
+	} else {
+		wasmFile = g.wasmFileFor(owner)
+	}
 	var scope gen.Scope = file
 	wasm := f.CoreFunction(dir)
 	tdir := dir
@@ -1687,8 +1774,12 @@ func (g *generator) declareFunction(owner wit.TypeOwner, dir wit.Direction, f *w
 	}
 
 	if dir == wit.Imported {
-		g.ensureParamImports(file, tdir, f.Params)
-		g.ensureParamImports(file, tdir, f.Results)
+		importFile := file
+		if mapABI {
+			importFile = wasmFile
+		}
+		g.ensureParamImports(importFile, tdir, f.Params)
+		g.ensureParamImports(importFile, tdir, f.Results)
 	}
 
 	var funcName, wasmName string
@@ -1746,6 +1837,9 @@ func (g *generator) declareFunction(owner wit.TypeOwner, dir wit.Direction, f *w
 		wasmFunc:   g.goFunction(wasmFile, tdir, dir, wasm, wasmName),
 		linkerName: linkerName,
 	}
+	if mapABI && dir == wit.Imported {
+		fdecl.goFunc.file = wasmFile
+	}
 	g.functions[dir][f] = fdecl
 	return fdecl, nil
 }
@@ -1785,6 +1879,9 @@ func (g *generator) defineImportedFunction(decl *funcDecl) error {
 	dir := wit.Imported
 	if !g.define(dir, decl.f) {
 		return nil
+	}
+	if usesMap(decl.f) {
+		g.defineStandardMapFunction(decl)
 	}
 
 	file := decl.goFunc.file
@@ -1965,6 +2062,9 @@ func (g *generator) defineExportedFunction(decl *funcDecl) error {
 	dir := wit.Exported
 	if !g.define(dir, decl.f) {
 		return nil
+	}
+	if usesMap(decl.f) {
+		g.defineStandardMapFunction(decl)
 	}
 	file := decl.goFunc.file
 	scope := g.exportScopes[decl.owner]

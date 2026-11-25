@@ -85,6 +85,7 @@ func PackageRoot(path string) Option {
 
 // CMPackage returns an [Option] that specifies the package path to the
 // Component Model utility package (default: github.com/kjanat/go-modules/cm).
+// Standard Go bindings for WIT maps also import the package's wasm32 subpackage.
 func CMPackage(path string) Option {
 	return optionFunc(func(opts *options) error {
 		opts.cmPackage = path

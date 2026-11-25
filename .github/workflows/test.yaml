@@ -66,6 +66,9 @@ jobs:
           - test:bindings:standalone
           - test:bindings:regenerated
           - wasm-tools:verify-release
+        include:
+          - os: ubuntu-latest
+            task: test:maps:go
         exclude:
           # Go runs wasip1 tests through go_wasip1_wasm_exec, a bash script that mounts the host root into the guest.
           - os: windows-latest

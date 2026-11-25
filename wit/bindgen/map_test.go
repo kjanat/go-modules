@@ -55,4 +55,21 @@ world example {
 			t.Errorf("generated Go is missing %q", want)
 		}
 	}
+	const custom = "example.com/custom/cm"
+	pkgs, err = Go(res, GeneratedBy("test"), CMPackage(custom))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, pkg := range pkgs {
+		if file := pkg.Files["map_abi_wasip1.go"]; file != nil {
+			if _, ok := file.Imports[custom+"/wasm32"]; !ok {
+				t.Errorf("map binding imports = %v, want %s/wasm32", file.Imports, custom)
+			}
+			if _, ok := file.Imports[cmPackage+"/wasm32"]; ok {
+				t.Errorf("map binding also imports default runtime %s/wasm32", cmPackage)
+			}
+			return
+		}
+	}
+	t.Fatal("no standard Go map binding was generated")
 }

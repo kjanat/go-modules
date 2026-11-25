@@ -1,3 +1,5 @@
+//go:build !wasip1 || tinygo
+
 package maps
 
 import (
