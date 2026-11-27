@@ -140,7 +140,7 @@ jobs:
         shell: bash
         working-directory: dist
         run: |
-          sha256sum -- * > checksums.txt
+          sha256sum -- * | tee checksums.txt
       - uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         env:
           SYFT_SOURCE_NAME: ${{ github.event.repository.name }}
@@ -153,10 +153,12 @@ jobs:
           output-file: dist/${{ github.event.repository.name }}.spdx.json
           upload-artifact: false
           upload-release-assets: false
-      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+      - name: Attest binary build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-checksums: dist/checksums.txt
-      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+      - name: Attest binary SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-checksums: dist/checksums.txt
           sbom-path: dist/${{ github.event.repository.name }}.spdx.json
