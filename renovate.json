@@ -1,10 +1,111 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
-	"extends": ["config:recommended"],
+	"extends": ["config:recommended", "security:gomodIndirectSecurityUpdates"],
 	"forkProcessing": "enabled",
 	"timezone": "Europe/Amsterdam",
 	"schedule": ["* * * * 1"],
+	"prConcurrentLimit": 4,
+	"prHourlyLimit": 2,
+	"minimumReleaseAge": "24 hours",
+	"minimumReleaseAgeBehaviour": "timestamp-optional",
+	"internalChecksFilter": "strict",
+	"automerge": false,
+	"platformAutomerge": false,
+	"ignoreTests": false,
+	"rebaseWhen": "conflicted",
+	"addLabels": ["dependencies"],
+	"ignorePaths": ["**/node_modules/**", "**/vendor/**", "tests/generated/**", "**/.mise/locks/**", "**/.config/mise/locks/**"],
+	"vulnerabilityAlerts": {
+		"enabled": true,
+		"automerge": false,
+		"addLabels": ["security"]
+	},
+	"customManagers": [
+		{
+			"description": "Keep the workspace toolchain with the toolchains in go.mod",
+			"customType": "regex",
+			"managerFilePatterns": ["/^go\\.work$/"],
+			"matchStrings": ["(?:^|\\r?\\n)toolchain[ \\t]+go(?<currentValue>\\d+\\.\\d+\\.\\d+)(?:\\r?\\n|$)"],
+			"depNameTemplate": "go",
+			"depTypeTemplate": "toolchain",
+			"datasourceTemplate": "golang-version"
+		},
+		{
+			"description": "Update the kprint version behind the repository's custom mise alias",
+			"customType": "regex",
+			"managerFilePatterns": ["/^mise\\.toml$/"],
+			"matchStrings": ["(?:^|\\r?\\n)kprint[ \\t]*=[ \\t]*\"(?<currentValue>\\d+\\.\\d+\\.\\d+)\""],
+			"depNameTemplate": "kprint",
+			"packageNameTemplate": "kjanat/kprint",
+			"datasourceTemplate": "github-releases",
+			"extractVersionTemplate": "^v?(?<version>.+)$"
+		}
+	],
 	"packageRules": [
+		{
+			"description": "Update checksums in modules connected by local replaces, including tests/",
+			"matchManagers": ["gomod"],
+			"postUpdateOptions": ["gomodTidyAll"]
+		},
+		{
+			"description": "Batch routine Go library updates across the modules",
+			"matchManagers": ["gomod"],
+			"matchDepTypes": ["require"],
+			"matchUpdateTypes": ["minor", "patch"],
+			"groupName": "Go libraries"
+		},
+		{
+			"description": "Review the Go project modules together",
+			"matchManagers": ["gomod"],
+			"matchPackageNames": ["golang.org/x/**"],
+			"matchUpdateTypes": ["minor", "patch"],
+			"groupName": "golang.org/x modules"
+		},
+		{
+			"description": "Automerge only stable patch updates for these libraries after the required tests pass",
+			"matchManagers": ["gomod"],
+			"matchDepTypes": ["require"],
+			"matchPackageNames": ["github.com/sergi/go-diff", "github.com/urfave/cli/v3"],
+			"matchCurrentVersion": "/^v?[1-9]\\d*\\.\\d+\\.\\d+$/",
+			"matchUpdateTypes": ["patch"],
+			"groupName": "Go library patches",
+			"minimumReleaseAgeBehaviour": "timestamp-required",
+			"rebaseWhen": "behind-base-branch",
+			"automerge": true
+		},
+		{
+			"description": "Keep the WASM runtime update independently reviewable",
+			"matchManagers": ["gomod"],
+			"matchPackageNames": ["github.com/kjanat/wazero"],
+			"groupName": null,
+			"automerge": false
+		},
+		{
+			"description": "Read upstream cm versions from cm/v* tags and keep its API changes on demand",
+			"matchDatasources": ["go"],
+			"matchPackageNames": ["go.bytecodealliance.org/cm"],
+			"overrideDatasource": "github-tags",
+			"overridePackageName": "bytecodealliance/go-modules",
+			"extractVersion": "^cm/(?<version>v\\d+\\.\\d+\\.\\d+)$",
+			"groupName": null,
+			"dependencyDashboardApproval": true,
+			"automerge": false
+		},
+		{
+			"description": "Keep the selected Go toolchain together without raising the minimum Go version",
+			"matchManagers": ["gomod", "custom.regex"],
+			"matchDepTypes": ["toolchain"],
+			"matchUpdateTypes": ["minor", "patch"],
+			"groupName": "Go toolchain",
+			"addLabels": ["dependencies: toolchain"]
+		},
+		{
+			"description": "Batch related GitHub Actions updates; the test matrix cannot validate publication credentials and release side effects",
+			"matchManagers": ["github-actions"],
+			"matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
+			"groupName": "GitHub Actions",
+			"automerge": false
+		},
 		{
 			"description": "Follow Beepboop v1 without replacing the major tag with a digest",
 			"matchManagers": ["github-actions"],
@@ -12,29 +113,61 @@
 			"pinDigests": false
 		},
 		{
-			"description": "Test upstream wasm-tools releases individually",
+			"description": "Beepboop's floating v1 refs already receive v1 updates without a PR",
+			"matchManagers": ["github-actions"],
+			"matchPackageNames": ["kjanat/beepboop", "kjanat/beepboop/**"],
+			"matchCurrentValue": "v1",
+			"matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
+			"enabled": false
+		},
+		{
+			"description": "Review the build and test tools in mise as a single batch",
+			"matchManagers": ["mise"],
+			"matchUpdateTypes": ["minor", "patch", "digest"],
+			"groupName": "mise build tools"
+		},
+		{
+			"description": "Include the custom kprint alias in the mise tool batch",
+			"matchManagers": ["custom.regex"],
+			"matchPackageNames": ["kjanat/kprint"],
+			"matchUpdateTypes": ["minor", "patch"],
+			"groupName": "mise build tools"
+		},
+		{
+			"description": "Do not replace versions computed from the embedded guest or Rust toolchain",
+			"matchManagers": ["mise"],
+			"matchCurrentValue": "/^\\{\\{/",
+			"enabled": false
+		},
+		{
+			"description": "Review Rust build dependencies separately from the guest release",
+			"matchManagers": ["cargo"],
+			"matchUpdateTypes": ["minor", "patch"],
+			"groupName": "Rust build dependencies"
+		},
+		{
+			"description": "Keep every wasm-tools candidate separate because merging can publish the guest",
 			"matchManagers": ["cargo"],
 			"matchPackageNames": ["wasm-tools"],
+			"groupName": null,
 			"rangeStrategy": "pin",
 			"automerge": false
 		},
 		{
-			"description": "Read go.bytecodealliance.org/cm versions from its cm/v* tags",
-			"matchDatasources": ["go"],
-			"matchPackageNames": ["go.bytecodealliance.org/cm"],
-			"overrideDatasource": "github-tags",
-			"overridePackageName": "bytecodealliance/go-modules",
-			"extractVersion": "^cm/(?<version>v\\d+\\.\\d+\\.\\d+)$"
-		},
-		{
-			"description": "Update the guest Rust toolchain once a month",
+			"description": "Review the guest Rust toolchain once a month, with a full week for nightlies to settle",
 			"matchManagers": ["rust-toolchain"],
-			"schedule": ["* 0-3 1 * *"],
+			"schedule": ["* * 1 * *"],
 			"automerge": false,
 			"addLabels": ["dependencies: toolchain"],
-			"minimumReleaseAge": "7 days"
+			"minimumReleaseAge": "7 days",
+			"minimumReleaseAgeBehaviour": "timestamp-required"
+		},
+		{
+			"description": "Keep major versions out of routine PR queues until requested",
+			"matchUpdateTypes": ["major"],
+			"groupName": null,
+			"dependencyDashboardApproval": true,
+			"automerge": false
 		}
-	],
-	"addLabels": ["dependencies"],
-	"assignees": ["kjanat"]
+	]
 }
