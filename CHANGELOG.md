@@ -2,6 +2,16 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.12.0] - 2026-11-27
+
+### Added
+
+- Generate stock Go WASI bindings for WIT map imports and exports, including nested maps and maps in records, variants, and results.
+
+### Changed
+
+- Upgrade `github.com/kjanat/go-modules/cm` to v0.5.0 and regenerate bindings. Use the generated variant constructors and initialize map-bearing results with `SetOK` or `SetErr`. Custom `--cm` runtimes must provide `MapResult` and the `wasm32` subpackage.
+
 ## [v0.11.1] - 2026-11-24
 
 ### Added
@@ -338,6 +348,7 @@ Initial version, supporting [TinyGo](https://tinygo.org/) + [WASI](https://wasi.
 - Because Go does not have a native tagged union type, pointers represented in `variant` and `result` types may not be visible to the garbage collector and may be freed while still in use.
 - Support for mainline [Go](https://go.dev/).
 
+[v0.12.0]: https://github.com/kjanat/go-modules/compare/v0.11.1...v0.12.0
 [v0.11.1]: https://github.com/kjanat/go-modules/compare/v0.11.0...v0.11.1
 [v0.11.0]: https://github.com/kjanat/go-modules/compare/v0.10.0...v0.11.0
 [v0.10.0]: https://github.com/kjanat/go-modules/compare/v0.9.3...v0.10.0
